@@ -1,0 +1,1657 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Executing Lua in Redis
+">
+      
+      
+        <meta name="author" content="Ean Yang">
+      
+      
+        <link rel="canonical" href="https://eanyang7.github.io/redis-doc/5-interact/programmability/eval-intro/">
+      
+      
+        <link rel="prev" href="../_index/">
+      
+      
+        <link rel="next" href="../functions-intro/">
+      
+      
+      <link rel="icon" href="../../../assets/favicon.jpg">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.12">
+    
+    
+      
+        <title>Scripting with Lua - redis 文档</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.fad675c6.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.356b1318.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="red" data-md-color-accent="deep-purple">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#getting-started" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="redis 文档" class="md-header__button md-logo" aria-label="redis 文档" data-md-component="logo">
+      
+  <img src="../../../assets/logo.jpg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            redis 文档
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Scripting with Lua
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="red" data-md-color-accent="deep-purple"  aria-label="切换为暗黑模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换为暗黑模式" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5c-.84 0-1.65.15-2.39.42L12 2M3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29L3.34 7m.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14L3.36 17M20.65 7l-1.77 3.79a7.023 7.023 0 0 0-2.38-4.15l4.15.36m-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29L20.64 17M12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44L12 22Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="red"  aria-label="切换为浅色模式"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="切换为浅色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3 3.19.09m3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95 2.06.05m-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7 0-.24-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91 1.61 0 2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08Z"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/EanYang7/redis-doc" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M186.1 328.7c0 20.9-10.9 55.1-36.7 55.1s-36.7-34.2-36.7-55.1 10.9-55.1 36.7-55.1 36.7 34.2 36.7 55.1zM480 278.2c0 31.9-3.2 65.7-17.5 95-37.9 76.6-142.1 74.8-216.7 74.8-75.8 0-186.2 2.7-225.6-74.8-14.6-29-20.2-63.1-20.2-95 0-41.9 13.9-81.5 41.5-113.6-5.2-15.8-7.7-32.4-7.7-48.8 0-21.5 4.9-32.3 14.6-51.8 45.3 0 74.3 9 108.8 36 29-6.9 58.8-10 88.7-10 27 0 54.2 2.9 80.4 9.2 34-26.7 63-35.2 107.8-35.2 9.8 19.5 14.6 30.3 14.6 51.8 0 16.4-2.6 32.7-7.7 48.2 27.5 32.4 39 72.3 39 114.2zm-64.3 50.5c0-43.9-26.7-82.6-73.5-82.6-18.9 0-37 3.4-56 6-14.9 2.3-29.8 3.2-45.1 3.2-15.2 0-30.1-.9-45.1-3.2-18.7-2.6-37-6-56-6-46.8 0-73.5 38.7-73.5 82.6 0 87.8 80.4 101.3 150.4 101.3h48.2c70.3 0 150.6-13.4 150.6-101.3zm-82.6-55.1c-25.8 0-36.7 34.2-36.7 55.1s10.9 55.1 36.7 55.1 36.7-34.2 36.7-55.1-10.9-55.1-36.7-55.1z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    github仓库
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="redis 文档" class="md-nav__button md-logo" aria-label="redis 文档" data-md-component="logo">
+      
+  <img src="../../../assets/logo.jpg" alt="logo">
+
+    </a>
+    redis 文档
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/EanYang7/redis-doc" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M186.1 328.7c0 20.9-10.9 55.1-36.7 55.1s-36.7-34.2-36.7-55.1 10.9-55.1 36.7-55.1 36.7 34.2 36.7 55.1zM480 278.2c0 31.9-3.2 65.7-17.5 95-37.9 76.6-142.1 74.8-216.7 74.8-75.8 0-186.2 2.7-225.6-74.8-14.6-29-20.2-63.1-20.2-95 0-41.9 13.9-81.5 41.5-113.6-5.2-15.8-7.7-32.4-7.7-48.8 0-21.5 4.9-32.3 14.6-51.8 45.3 0 74.3 9 108.8 36 29-6.9 58.8-10 88.7-10 27 0 54.2 2.9 80.4 9.2 34-26.7 63-35.2 107.8-35.2 9.8 19.5 14.6 30.3 14.6 51.8 0 16.4-2.6 32.7-7.7 48.2 27.5 32.4 39 72.3 39 114.2zm-64.3 50.5c0-43.9-26.7-82.6-73.5-82.6-18.9 0-37 3.4-56 6-14.9 2.3-29.8 3.2-45.1 3.2-15.2 0-30.1-.9-45.1-3.2-18.7-2.6-37-6-56-6-46.8 0-73.5 38.7-73.5 82.6 0 87.8 80.4 101.3 150.4 101.3h48.2c70.3 0 150.6-13.4 150.6-101.3zm-82.6-55.1c-25.8 0-36.7 34.2-36.7 55.1s10.9 55.1 36.7 55.1 36.7-34.2 36.7-55.1-10.9-55.1-36.7-55.1z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    github仓库
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Documentation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../0-about/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    0 about
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../1-get-started/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    1 get started
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../2-install/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    2 install
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../3-connect/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    3 connect
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../4-data-types/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    4 data types
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    5 interact
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            5 interact
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../_index/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+     index
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pubsub/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis Pub/Sub
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../transactions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Transactions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7_4" id="__nav_7_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Programmability
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7_4">
+            <span class="md-nav__icon md-icon"></span>
+            Programmability
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../_index/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis programmability
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Scripting with Lua
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Scripting with Lua
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#getting-started" class="md-nav__link">
+    <span class="md-ellipsis">
+      Getting started
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#script-parameterization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Script parameterization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interacting-with-redis-from-a-script" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interacting with Redis from a script
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#script-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      Script cache
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Script cache">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cache-volatility" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cache volatility
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#evalsha-in-the-context-of-pipelining" class="md-nav__link">
+    <span class="md-ellipsis">
+      !EVALSHA in the context of pipelining
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#script-cache-semantics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Script cache semantics
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-script-command" class="md-nav__link">
+    <span class="md-ellipsis">
+      The !SCRIPT command
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#script-replication" class="md-nav__link">
+    <span class="md-ellipsis">
+      Script replication
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Script replication">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#replicating-commands-instead-of-scripts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Replicating commands instead of scripts
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scripts-with-deterministic-writes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scripts with deterministic writes
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#debugging-eval-scripts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Debugging Eval scripts
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#execution-under-low-memory-conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Execution under low memory conditions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#eval-flags" class="md-nav__link">
+    <span class="md-ellipsis">
+      Eval flags
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../functions-intro/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis functions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lua-api/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis Lua API reference
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lua-debugging/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Debugging Lua scripts in Redis
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../6-manual/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    6 manual
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../7-management/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    7 management
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../8-reference/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    8 reference
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#getting-started" class="md-nav__link">
+    <span class="md-ellipsis">
+      Getting started
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#script-parameterization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Script parameterization
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interacting-with-redis-from-a-script" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interacting with Redis from a script
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#script-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      Script cache
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Script cache">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cache-volatility" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cache volatility
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#evalsha-in-the-context-of-pipelining" class="md-nav__link">
+    <span class="md-ellipsis">
+      !EVALSHA in the context of pipelining
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#script-cache-semantics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Script cache semantics
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-script-command" class="md-nav__link">
+    <span class="md-ellipsis">
+      The !SCRIPT command
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#script-replication" class="md-nav__link">
+    <span class="md-ellipsis">
+      Script replication
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Script replication">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#replicating-commands-instead-of-scripts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Replicating commands instead of scripts
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scripts-with-deterministic-writes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scripts with deterministic writes
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#debugging-eval-scripts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Debugging Eval scripts
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#execution-under-low-memory-conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Execution under low memory conditions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#eval-flags" class="md-nav__link">
+    <span class="md-ellipsis">
+      Eval flags
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+    <a href="https://github.com/EanYang7/redis-doc/tree/main/docs/5-interact/programmability/eval-intro.md" title="编辑此页" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/EanYang7/redis-doc/tree/main/docs/5-interact/programmability/eval-intro.md" title="查看本页的源代码" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0 8a5 5 0 0 1-5-5 5 5 0 0 1 5-5 5 5 0 0 1 5 5 5 5 0 0 1-5 5m0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5Z"/></svg>
+    </a>
+  
+
+
+  <h1>Scripting with Lua</h1>
+
+<p>Redis lets users upload and execute Lua scripts on the server.
+Scripts can employ programmatic control structures and use most of the <a href="/commands">commands</a> while executing to access the database.
+Because scripts execute in the server, reading and writing data from scripts is very efficient.</p>
+<p>Redis guarantees the script's atomic execution.
+While executing the script, all server activities are blocked during its entire runtime.
+These semantics mean that all of the script's effects either have yet to happen or had already happened.</p>
+<p>Scripting offers several properties that can be valuable in many cases.
+These include:</p>
+<ul>
+<li>Providing locality by executing logic where data lives. Data locality reduces overall latency and saves networking resources.</li>
+<li>Blocking semantics that ensure the script's atomic execution.</li>
+<li>Enabling the composition of simple capabilities that are either missing from Redis or are too niche to be a part of it.</li>
+</ul>
+<p>Lua lets you run part of your application logic inside Redis.
+Such scripts can perform conditional updates across multiple keys, possibly combining several different data types atomically.</p>
+<p>Scripts are executed in Redis by an embedded execution engine.
+Presently, Redis supports a single scripting engine, the <a href="https://www.lua.org/">Lua 5.1</a> interpreter.
+Please refer to the <a href="/topics/lua-api">Redis Lua API Reference</a> page for complete documentation.</p>
+<p>Although the server executes them, Eval scripts are regarded as a part of the client-side application, which is why they're not named, versioned, or persisted.
+So all scripts may need to be reloaded by the application at any time if missing (after a server restart, fail-over to a replica, etc.).
+As of version 7.0, <a href="/topics/functions-intro">Redis Functions</a> offer an alternative approach to programmability which allow the server itself to be extended with additional programmed logic.</p>
+<h2 id="getting-started">Getting started<a class="headerlink" href="#getting-started" title="Permanent link">⚓︎</a></h2>
+<p>We'll start scripting with Redis by using the <code>EVAL</code> command.</p>
+<p>Here's our first example:</p>
+<div class="highlight"><pre><span></span><code>&gt; EVAL &quot;return &#39;Hello, scripting!&#39;&quot; 0
+&quot;Hello, scripting!&quot;
+</code></pre></div>
+<p>In this example, <code>EVAL</code> takes two arguments.
+The first argument is a string that consists of the script's Lua source code.
+The script doesn't need to include any definitions of Lua function.
+It is just a Lua program that will run in the Redis engine's context.</p>
+<p>The second argument is the number of arguments that follow the script's body, starting from the third argument, representing Redis key names.
+In this example, we used the value <em>0</em> because we didn't provide the script with any arguments, whether the names of keys or not.</p>
+<h2 id="script-parameterization">Script parameterization<a class="headerlink" href="#script-parameterization" title="Permanent link">⚓︎</a></h2>
+<p>It is possible, although highly ill-advised, to have the application dynamically generate script source code per its needs.
+For example, the application could send these two entirely different, but at the same time perfectly identical scripts:</p>
+<div class="highlight"><pre><span></span><code>redis&gt; EVAL &quot;return &#39;Hello&#39;&quot; 0
+&quot;Hello&quot;
+redis&gt; EVAL &quot;return &#39;Scripting!&#39;&quot; 0
+&quot;Scripting!&quot;
+</code></pre></div>
+<p>Although this mode of operation isn't blocked by Redis, it is an anti-pattern due to script cache considerations (more on the topic below).
+Instead of having your application generate subtle variations of the same scripts, you can parametrize them and pass any arguments needed for to execute them.</p>
+<p>The following example demonstrates how to achieve the same effects as above, but via parameterization:</p>
+<div class="highlight"><pre><span></span><code>redis&gt; EVAL &quot;return ARGV[1]&quot; 0 Hello
+&quot;Hello&quot;
+redis&gt; EVAL &quot;return ARGV[1]&quot; 0 Parameterization!
+&quot;Parameterization!&quot;
+</code></pre></div>
+<p>At this point, it is essential to understand the distinction Redis makes between input arguments that are names of keys and those that aren't.</p>
+<p>While key names in Redis are just strings, unlike any other string values, these represent keys in the database.
+The name of a key is a fundamental concept in Redis and is the basis for operating the Redis Cluster.</p>
+<p><strong>Important:</strong>
+to ensure the correct execution of scripts, both in standalone and clustered deployments, all names of keys that a script accesses must be explicitly provided as input key arguments.
+The script <strong>should only</strong> access keys whose names are given as input arguments.
+Scripts <strong>should never</strong> access keys with programmatically-generated names or based on the contents of data structures stored in the database.</p>
+<p>Any input to the function that isn't the name of a key is a regular input argument.</p>
+<p>In the example above, both <em>Hello</em> and <em>Parameterization!</em> regular input arguments for the script.
+Because the script doesn't touch any keys, we use the numerical argument <em>0</em> to specify there are no key name arguments.
+The execution context makes arguments available to the script through <a href="/topics/lua-api#the-keys-global-variable"><em>KEYS</em></a> and <a href="/topics/lua-api#the-argv-global-variable"><em>ARGV</em></a> global runtime variables.
+The <em>KEYS</em> table is pre-populated with all key name arguments provided to the script before its execution, whereas the <em>ARGV</em> table serves a similar purpose but for regular arguments.</p>
+<p>The following attempts to demonstrate the distribution of input arguments between the scripts <em>KEYS</em> and <em>ARGV</em> runtime global variables:</p>
+<div class="highlight"><pre><span></span><code>redis&gt; EVAL &quot;return { KEYS[1], KEYS[2], ARGV[1], ARGV[2], ARGV[3] }&quot; 2 key1 key2 arg1 arg2 arg3
+1) &quot;key1&quot;
+2) &quot;key2&quot;
+3) &quot;arg1&quot;
+4) &quot;arg2&quot;
+5) &quot;arg3&quot;
+</code></pre></div>
+<p><strong>Note:</strong>
+as can been seen above, Lua's table arrays are returned as <a href="/topics/protocol#resp-arrays">RESP2 array replies</a>, so it is likely that your client's library will convert it to the native array data type in your programming language.
+Please refer to the rules that govern <a href="/topics/lua-api#data-type-conversion">data type conversion</a> for more pertinent information.</p>
+<h2 id="interacting-with-redis-from-a-script">Interacting with Redis from a script<a class="headerlink" href="#interacting-with-redis-from-a-script" title="Permanent link">⚓︎</a></h2>
+<p>It is possible to call Redis commands from a Lua script either via <a href="/topics/lua-api#redis.call"><code>redis.call()</code></a> or <a href="/topics/lua-api#redis.pcall"><code>redis.pcall()</code></a>.</p>
+<p>The two are nearly identical.
+Both execute a Redis command along with its provided arguments, if these represent a well-formed command.
+However, the difference between the two functions lies in the manner in which runtime errors (such as syntax errors, for example) are handled.
+Errors raised from calling <code>redis.call()</code> function are returned directly to the client that had executed it.
+Conversely, errors encountered when calling the <code>redis.pcall()</code> function are returned to the script's execution context instead for possible handling.</p>
+<p>For example, consider the following:</p>
+<p><div class="highlight"><pre><span></span><code>&gt; EVAL &quot;return redis.call(&#39;SET&#39;, KEYS[1], ARGV[1])&quot; 1 foo bar
+OK
+</code></pre></div>
+The above script accepts one key name and one value as its input arguments.
+When executed, the script calls the <code>SET</code> command to set the input key, <em>foo</em>, with the string value "bar".</p>
+<h2 id="script-cache">Script cache<a class="headerlink" href="#script-cache" title="Permanent link">⚓︎</a></h2>
+<p>Until this point, we've used the <code>EVAL</code> command to run our script.</p>
+<p>Whenever we call <code>EVAL</code>, we also include the script's source code with the request.
+Repeatedly calling <code>EVAL</code> to execute the same set of parameterized scripts, wastes both network bandwidth and also has some overheads in Redis.
+Naturally, saving on network and compute resources is key, so, instead, Redis provides a caching mechanism for scripts.</p>
+<p>Every script you execute with <code>EVAL</code> is stored in a dedicated cache that the server keeps.
+The cache's contents are organized by the scripts' SHA1 digest sums, so the SHA1 digest sum of a script uniquely identifies it in the cache.
+You can verify this behavior by running <code>EVAL</code> and calling <code>INFO</code> afterward.
+You'll notice that the <em>used_memory_scripts_eval</em> and <em>number_of_cached_scripts</em> metrics grow with every new script that's executed.</p>
+<p>As mentioned above, dynamically-generated scripts are an anti-pattern.
+Generating scripts during the application's runtime may, and probably will, exhaust the host's memory resources for caching them.
+Instead, scripts should be as generic as possible and provide customized execution via their arguments.</p>
+<p>A script is loaded to the server's cache by calling the <code>SCRIPT LOAD</code> command and providing its source code.
+The server doesn't execute the script, but instead just compiles and loads it to the server's cache.
+Once loaded, you can execute the cached script with the SHA1 digest returned from the server.</p>
+<p>Here's an example of loading and then executing a cached script:</p>
+<div class="highlight"><pre><span></span><code>redis&gt; SCRIPT LOAD &quot;return &#39;Immabe a cached script&#39;&quot;
+&quot;c664a3bf70bd1d45c4284ffebb65a6f2299bfc9f&quot;
+redis&gt; EVALSHA c664a3bf70bd1d45c4284ffebb65a6f2299bfc9f 0
+&quot;Immabe a cached script&quot;
+</code></pre></div>
+<h3 id="cache-volatility">Cache volatility<a class="headerlink" href="#cache-volatility" title="Permanent link">⚓︎</a></h3>
+<p>The Redis script cache is <strong>always volatile</strong>.
+It isn't considered as a part of the database and is <strong>not persisted</strong>.
+The cache may be cleared when the server restarts, during fail-over when a replica assumes the master role, or explicitly by <code>SCRIPT FLUSH</code>.
+That means that cached scripts are ephemeral, and the cache's contents can be lost at any time.</p>
+<p>Applications that use scripts should always call <code>EVALSHA</code> to execute them.
+The server returns an error if the script's SHA1 digest is not in the cache.
+For example:</p>
+<div class="highlight"><pre><span></span><code>redis&gt; EVALSHA ffffffffffffffffffffffffffffffffffffffff 0
+(error) NOSCRIPT No matching script
+</code></pre></div>
+<p>In this case, the application should first load it with <code>SCRIPT LOAD</code> and then call <code>EVALSHA</code> once more to run the cached script by its SHA1 sum.
+Most of <a href="/clients">Redis' clients</a> already provide utility APIs for doing that automatically.
+Please consult your client's documentation regarding the specific details.</p>
+<h3 id="evalsha-in-the-context-of-pipelining"><code>!EVALSHA</code> in the context of pipelining<a class="headerlink" href="#evalsha-in-the-context-of-pipelining" title="Permanent link">⚓︎</a></h3>
+<p>Special care should be given executing <code>EVALSHA</code> in the context of a <a href="/topics/pipelining">pipelined request</a>.
+The commands in a pipelined request run in the order they are sent, but other clients' commands may be interleaved for execution between these.
+Because of that, the <code>NOSCRIPT</code> error can return from a pipelined request but can't be handled.</p>
+<p>Therefore, a client library's implementation should revert to using plain <code>EVAL</code> of parameterized in the context of a pipeline.</p>
+<h3 id="script-cache-semantics">Script cache semantics<a class="headerlink" href="#script-cache-semantics" title="Permanent link">⚓︎</a></h3>
+<p>During normal operation, an application's scripts are meant to stay indefinitely in the cache (that is, until the server is restarted or the cache being flushed).
+The underlying reasoning is that the script cache contents of a well-written application are unlikely to grow continuously.
+Even large applications that use hundreds of cached scripts shouldn't be an issue in terms of cache memory usage. </p>
+<p>The only way to flush the script cache is by explicitly calling the <code>SCRIPT FLUSH</code> command.
+Running the command will <em>completely flush</em> the scripts cache, removing all the scripts executed so far.
+Typically, this is only needed when the instance is going to be instantiated for another customer or application in a cloud environment.</p>
+<p>Also, as already mentioned, restarting a Redis instance flushes the non-persistent script cache.
+However, from the point of view of the Redis client, there are only two ways to make sure that a Redis instance was not restarted between two different commands:</p>
+<ul>
+<li>The connection we have with the server is persistent and was never closed so far.</li>
+<li>The client explicitly checks the <code>run_id</code> field in the <code>INFO</code> command to ensure the server was not restarted and is still the same process.</li>
+</ul>
+<p>Practically speaking, it is much simpler for the client to assume that in the context of a given connection, cached scripts are guaranteed to be there unless the administrator explicitly invoked the <code>SCRIPT FLUSH</code> command.
+The fact that the user can count on Redis to retain cached scripts is semantically helpful in the context of pipelining.</p>
+<h2 id="the-script-command">The <code>!SCRIPT</code> command<a class="headerlink" href="#the-script-command" title="Permanent link">⚓︎</a></h2>
+<p>The Redis <code>SCRIPT</code> provides several ways for controlling the scripting subsystem.
+These are:</p>
+<ul>
+<li>
+<p><code>SCRIPT FLUSH</code>: this command is the only way to force Redis to flush the scripts cache.
+  It is most useful in environments where the same Redis instance is reassigned to different uses.
+  It is also helpful for testing client libraries' implementations of the scripting feature.</p>
+</li>
+<li>
+<p><code>SCRIPT EXISTS</code>: given one or more SHA1 digests as arguments, this command returns an array of <em>1</em>'s and <em>0</em>'s.
+  <em>1</em> means the specific SHA1 is recognized as a script already present in the scripting cache. <em>0</em>'s meaning is that a script with this SHA1 wasn't loaded before (or at least never since the latest call to <code>SCRIPT FLUSH</code>).</p>
+</li>
+<li>
+<p><code>SCRIPT LOAD script</code>: this command registers the specified script in the Redis script cache. 
+  It is a useful command in all the contexts where we want to ensure that <code>EVALSHA</code> doesn't not fail (for instance, in a pipeline or when called from a <a href="/topics/transactions"><code>MULTI</code>/<code>EXEC</code> transaction</a>), without the need to execute the script.</p>
+</li>
+<li>
+<p><code>SCRIPT KILL</code>: this command is the only way to interrupt a long-running script (a.k.a slow script), short of shutting down the server.
+  A script is deemed as slow once its execution's duration exceeds the configured <a href="/topics/programmability#maximum-execution-time">maximum execution time</a> threshold.
+  The <code>SCRIPT KILL</code> command can be used only with scripts that did not modify the dataset during their execution (since stopping a read-only script does not violate the scripting engine's guaranteed atomicity).</p>
+</li>
+<li>
+<p><code>SCRIPT DEBUG</code>: controls use of the built-in <a href="/topics/ldb">Redis Lua scripts debugger</a>.</p>
+</li>
+</ul>
+<h2 id="script-replication">Script replication<a class="headerlink" href="#script-replication" title="Permanent link">⚓︎</a></h2>
+<p>In standalone deployments, a single Redis instance called <em>master</em> manages the entire database.
+A <a href="/topics/cluster-tutorial">clustered deployment</a> has at least three masters managing the sharded database.
+Redis uses <a href="/topics/replication">replication</a> to maintain one or more replicas, or exact copies, for any given master.</p>
+<p>Because scripts can modify the data, Redis ensures all write operations performed by a script are also sent to replicas to maintain consistency.
+There are two conceptual approaches when it comes to script replication:</p>
+<ol>
+<li>Verbatim replication: the master sends the script's source code to the replicas.
+   Replicas then execute the script and apply the write effects.
+   This mode can save on replication bandwidth in cases where short scripts generate many commands (for example, a <em>for</em> loop).
+   However, this replication mode means that replicas redo the same work done by the master, which is wasteful.
+   More importantly, it also requires <a href="#scripts-with-deterministic-writes">all write scripts to be deterministic</a>.</li>
+<li>Effects replication: only the script's data-modifying commands are replicated.
+   Replicas then run the commands without executing any scripts.
+   While potentially lengthier in terms of network traffic, this replication mode is deterministic by definition and therefore doesn't require special consideration.</li>
+</ol>
+<p>Verbatim script replication was the only mode supported until Redis 3.2, in which effects replication was added.
+The <em>lua-replicate-commands</em> configuration directive and <a href="/topics/lua-api#redis.replicate_commands"><code>redis.replicate_commands()</code></a> Lua API can be used to enable it.</p>
+<p>In Redis 5.0, effects replication became the default mode.
+As of Redis 7.0, verbatim replication is no longer supported.</p>
+<h3 id="replicating-commands-instead-of-scripts">Replicating commands instead of scripts<a class="headerlink" href="#replicating-commands-instead-of-scripts" title="Permanent link">⚓︎</a></h3>
+<p>Starting with Redis 3.2, it is possible to select an alternative replication method.
+Instead of replicating whole scripts, we can replicate the write commands generated by the script.
+We call this <strong>script effects replication</strong>.</p>
+<p><strong>Note:</strong>
+starting with Redis 5.0, script effects replication is the default mode and does not need to be explicitly enabled.</p>
+<p>In this replication mode, while Lua scripts are executed, Redis collects all the commands executed by the Lua scripting engine that actually modify the dataset.
+When the script execution finishes, the sequence of commands that the script generated are wrapped into a <a href="/topics/transactions"><code>MULTI</code>/<code>EXEC</code> transaction</a> and are sent to the replicas and AOF.</p>
+<p>This is useful in several ways depending on the use case:</p>
+<ul>
+<li>When the script is slow to compute, but the effects can be summarized by a few write commands, it is a shame to re-compute the script on the replicas or when reloading the AOF.
+  In this case, it is much better to replicate just the effects of the script.</li>
+<li>When script effects replication is enabled, the restrictions on non-deterministic functions are removed.
+  You can, for example, use the <code>TIME</code> or <code>SRANDMEMBER</code> commands inside your scripts freely at any place.</li>
+<li>The Lua PRNG in this mode is seeded randomly on every call.</li>
+</ul>
+<p>Unless already enabled by the server's configuration or defaults (before Redis 7.0), you need to issue the following Lua command before the script performs a write:</p>
+<div class="highlight"><pre><span></span><code><span class="n">redis</span><span class="p">.</span><span class="n">replicate_commands</span><span class="p">()</span>
+</code></pre></div>
+<p>The <a href="/topics/lua-api#redis.replicate_commands"><code>redis.replicate_commands()</code></a> function returns <em>true) if script effects replication was enabled;
+otherwise, if the function was called after the script already called a write command,
+it returns _false</em>, and normal whole script replication is used.</p>
+<p>This function is deprecated as of Redis 7.0, and while you can still call it, it will always succeed. </p>
+<h3 id="scripts-with-deterministic-writes">Scripts with deterministic writes<a class="headerlink" href="#scripts-with-deterministic-writes" title="Permanent link">⚓︎</a></h3>
+<p><strong>Note:</strong>
+Starting with Redis 5.0, script replication is by default effect-based rather than verbatim.
+In Redis 7.0, verbatim script replication had been removed entirely.
+The following section only applies to versions lower than Redis 7.0 when not using effect-based script replication.</p>
+<p>An important part of scripting is writing scripts that only change the database in a deterministic way.
+Scripts executed in a Redis instance are, by default until version 5.0, propagated to replicas and to the AOF file by sending the script itself -- not the resulting commands.
+Since the script will be re-run on the remote host (or when reloading the AOF file), its changes to the database must be reproducible.</p>
+<p>The reason for sending the script is that it is often much faster than sending the multiple commands that the script generates.
+If the client is sending many scripts to the master, converting the scripts into individual commands for the replica / AOF would result in too much bandwidth for the replication link or the Append Only File (and also too much CPU since dispatching a command received via the network is a lot more work for Redis compared to dispatching a command invoked by Lua scripts).</p>
+<p>Normally replicating scripts instead of the effects of the scripts makes sense, however not in all the cases.
+So starting with Redis 3.2, the scripting engine is able to, alternatively, replicate the sequence of write commands resulting from the script execution, instead of replication the script itself.</p>
+<p>In this section, we'll assume that scripts are replicated verbatim by sending the whole script.
+Let's call this replication mode <strong>verbatim scripts replication</strong>.</p>
+<p>The main drawback with the <em>whole scripts replication</em> approach is that scripts are required to have the following property:
+the script <strong>always must</strong> execute the same Redis <em>write</em> commands with the same arguments given the same input data set.
+Operations performed by the script can't depend on any hidden (non-explicit) information or state that may change as the script execution proceeds or between different executions of the script.
+Nor can it depend on any external input from I/O devices.</p>
+<p>Acts such as using the system time, calling Redis commands that return random values (e.g., <code>RANDOMKEY</code>), or using Lua's random number generator, could result in scripts that will not evaluate consistently.</p>
+<p>To enforce the deterministic behavior of scripts, Redis does the following:</p>
+<ul>
+<li>Lua does not export commands to access the system time or other external states.</li>
+<li>Redis will block the script with an error if a script calls a Redis command able to alter the data set <strong>after</strong> a Redis <em>random</em> command like <code>RANDOMKEY</code>, <code>SRANDMEMBER</code>, <code>TIME</code>.
+  That means that read-only scripts that don't modify the dataset can call those commands.
+  Note that a <em>random command</em> does not necessarily mean a command that uses random numbers: any non-deterministic command is considered as a random command (the best example in this regard is the <code>TIME</code> command).</li>
+<li>In Redis version 4.0, commands that may return elements in random order, such as <code>SMEMBERS</code> (because Redis Sets are <em>unordered</em>), exhibit a different behavior when called from Lua,
+and undergo a silent lexicographical sorting filter before returning data to Lua scripts.
+  So <code>redis.call("SMEMBERS",KEYS[1])</code> will always return the Set elements in the same order, while the same command invoked by normal clients may return different results even if the key contains exactly the same elements.
+  However, starting with Redis 5.0, this ordering is no longer performed because replicating effects circumvents this type of non-determinism.
+  In general, even when developing for Redis 4.0, never assume that certain commands in Lua will be ordered, but instead rely on the documentation of the original command you call to see the properties it provides.</li>
+<li>Lua's pseudo-random number generation function <code>math.random</code> is modified and always uses the same seed for every execution.
+  This means that calling <a href="/topics/lua-api#runtime-libraries"><code>math.random</code></a> will always generate the same sequence of numbers every time a script is executed (unless <code>math.randomseed</code> is used).</li>
+</ul>
+<p>All that said, you can still use commands that write and random behavior with a simple trick.
+Imagine that you want to write a Redis script that will populate a list with N random integers.</p>
+<p>The initial implementation in Ruby could look like this:</p>
+<div class="highlight"><pre><span></span><code>require &#39;rubygems&#39;
+require &#39;redis&#39;
+
+r = Redis.new
+
+RandomPushScript = &lt;&lt;EOF
+    local i = tonumber(ARGV[1])
+    local res
+    while (i &gt; 0) do
+        res = redis.call(&#39;LPUSH&#39;,KEYS[1],math.random())
+        i = i-1
+    end
+    return res
+EOF
+
+r.del(:mylist)
+puts r.eval(RandomPushScript,[:mylist],[10,rand(2**32)])
+</code></pre></div>
+<p>Every time this code runs, the resulting list will have exactly the
+following elements:</p>
+<div class="highlight"><pre><span></span><code>redis&gt; LRANGE mylist 0 -1
+ 1) &quot;0.74509509873814&quot;
+ 2) &quot;0.87390407681181&quot;
+ 3) &quot;0.36876626981831&quot;
+ 4) &quot;0.6921941534114&quot;
+ 5) &quot;0.7857992587545&quot;
+ 6) &quot;0.57730350670279&quot;
+ 7) &quot;0.87046522734243&quot;
+ 8) &quot;0.09637165539729&quot;
+ 9) &quot;0.74990198051087&quot;
+10) &quot;0.17082803611217&quot;
+</code></pre></div>
+<p>To make the script both deterministic and still have it produce different random elements,
+we can add an extra argument to the script that's the seed to Lua's pseudo-random number generator.
+The new script is as follows:</p>
+<div class="highlight"><pre><span></span><code>RandomPushScript = &lt;&lt;EOF
+    local i = tonumber(ARGV[1])
+    local res
+    math.randomseed(tonumber(ARGV[2]))
+    while (i &gt; 0) do
+        res = redis.call(&#39;LPUSH&#39;,KEYS[1],math.random())
+        i = i-1
+    end
+    return res
+EOF
+
+r.del(:mylist)
+puts r.eval(RandomPushScript,1,:mylist,10,rand(2**32))
+</code></pre></div>
+<p>What we are doing here is sending the seed of the PRNG as one of the arguments.
+The script output will always be the same given the same arguments (our requirement) but we are changing one of the arguments at every invocation,
+generating the random seed client-side.
+The seed will be propagated as one of the arguments both in the replication link and in the Append Only File,
+guaranteeing that the same changes will be generated when the AOF is reloaded or when the replica processes the script.</p>
+<p>Note: an important part of this behavior is that the PRNG that Redis implements as <code>math.random</code> and <code>math.randomseed</code> is guaranteed to have the same output regardless of the architecture of the system running Redis.
+32-bit, 64-bit, big-endian and little-endian systems will all produce the same output.</p>
+<h2 id="debugging-eval-scripts">Debugging Eval scripts<a class="headerlink" href="#debugging-eval-scripts" title="Permanent link">⚓︎</a></h2>
+<p>Starting with Redis 3.2, Redis has support for native Lua debugging.
+The Redis Lua debugger is a remote debugger consisting of a server, which is Redis itself, and a client, which is by default <a href="/topics/rediscli"><code>redis-cli</code></a>.</p>
+<p>The Lua debugger is described in the <a href="/topics/ldb">Lua scripts debugging</a> section of the Redis documentation.</p>
+<h2 id="execution-under-low-memory-conditions">Execution under low memory conditions<a class="headerlink" href="#execution-under-low-memory-conditions" title="Permanent link">⚓︎</a></h2>
+<p>When memory usage in Redis exceeds the <code>maxmemory</code> limit, the first write command encountered in the script that uses additional memory will cause the script to abort (unless <a href="/topics/lua-api#redis.pcall"><code>redis.pcall</code></a> was used).</p>
+<p>However, an exception to the above is when the script's first write command does not use additional memory, as is the case with  (for example, <code>DEL</code> and <code>LREM</code>).
+In this case, Redis will allow all commands in the script to run to ensure atomicity.
+If subsequent writes in the script consume additional memory, Redis' memory usage can exceed the threshold set by the <code>maxmemory</code> configuration directive.</p>
+<p>Another scenario in which a script can cause memory usage to cross the <code>maxmemory</code> threshold is when the execution begins when Redis is slightly below <code>maxmemory</code>, so the script's first write command is allowed.
+As the script executes, subsequent write commands consume more memory leading to the server using more RAM than the configured <code>maxmemory</code> directive.</p>
+<p>In those scenarios, you should consider setting the <code>maxmemory-policy</code> configuration directive to any values other than <code>noeviction</code>.
+In addition, Lua scripts should be as fast as possible so that eviction can kick in between executions.</p>
+<p>Note that you can change this behaviour by using <a href="#eval-flags">flags</a></p>
+<h2 id="eval-flags">Eval flags<a class="headerlink" href="#eval-flags" title="Permanent link">⚓︎</a></h2>
+<p>Normally, when you run an Eval script, the server does not know how it accesses the database.
+By default, Redis assumes that all scripts read and write data.
+However, starting with Redis 7.0, there's a way to declare flags when creating a script in order to tell Redis how it should behave.</p>
+<p>The way to do that is by using a Shebang statement on the first line of the script like so:</p>
+<div class="highlight"><pre><span></span><code>#!lua flags=no-writes,allow-stale
+local x = redis.call(&#39;get&#39;,&#39;x&#39;)
+return x
+</code></pre></div>
+<p>Note that as soon as Redis sees the <code>#!</code> comment, it'll treat the script as if it declares flags, even if no flags are defined,
+it still has a different set of defaults compared to a script without a <code>#!</code> line.</p>
+<p>Another difference is that scripts without <code>#!</code> can run commands that access keys belonging to different cluster hash slots, but ones with <code>#!</code> inherit the default flags, so they cannot.</p>
+<p>Please refer to <a href="/topics/lua-api#script_flags">Script flags</a> to learn about the various scripts and the defaults.</p>
+
+  <hr>
+<div class="md-source-file">
+  <small>
+    
+      最后更新:
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 25, 2023</span>
+      
+        <br>
+        创建日期:
+        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 25, 2023</span>
+      
+    
+  </small>
+</div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../_index/" class="md-footer__link md-footer__link--prev" aria-label="上一页: Redis programmability">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                Redis programmability
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../functions-intro/" class="md-footer__link md-footer__link--next" aria-label="下一页: Redis functions">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                Redis functions
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2023 Ean Yang
+    </div>
+  
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/YQisme" target="_blank" rel="noopener" title="github主页" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://space.bilibili.com/244185393?spm_id_from=333.788.0.0" target="_blank" rel="noopener" title="b站主页" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M488.6 104.1c16.7 18.1 24.4 39.7 23.3 65.7v202.4c-.4 26.4-9.2 48.1-26.5 65.1-17.2 17-39.1 25.9-65.5 26.7H92.02c-26.45-.8-48.21-9.8-65.28-27.2C9.682 419.4.767 396.5 0 368.2V169.8c.767-26 9.682-47.6 26.74-65.7C43.81 87.75 65.57 78.77 92.02 78h29.38L96.05 52.19c-5.75-5.73-8.63-13-8.63-21.79 0-8.8 2.88-16.06 8.63-21.797C101.8 2.868 109.1 0 117.9 0s16.1 2.868 21.9 8.603L213.1 78h88l74.5-69.397C381.7 2.868 389.2 0 398 0c8.8 0 16.1 2.868 21.9 8.603 5.7 5.737 8.6 12.997 8.6 21.797 0 8.79-2.9 16.06-8.6 21.79L394.6 78h29.3c26.4.77 48 9.75 64.7 26.1zm-38.8 69.7c-.4-9.6-3.7-17.4-10.7-23.5-5.2-6.1-14-9.4-22.7-9.8H96.05c-9.59.4-17.45 3.7-23.58 9.8-6.14 6.1-9.4 13.9-9.78 23.5v194.4c0 9.2 3.26 17 9.78 23.5s14.38 9.8 23.58 9.8H416.4c9.2 0 17-3.3 23.3-9.8 6.3-6.5 9.7-14.3 10.1-23.5V173.8zm-264.3 42.7c6.3 6.3 9.7 14.1 10.1 23.2V273c-.4 9.2-3.7 16.9-9.8 23.2-6.2 6.3-14 9.5-23.6 9.5-9.6 0-17.5-3.2-23.6-9.5-6.1-6.3-9.4-14-9.8-23.2v-33.3c.4-9.1 3.8-16.9 10.1-23.2 6.3-6.3 13.2-9.6 23.3-10 9.2.4 17 3.7 23.3 10zm191.5 0c6.3 6.3 9.7 14.1 10.1 23.2V273c-.4 9.2-3.7 16.9-9.8 23.2-6.1 6.3-14 9.5-23.6 9.5-9.6 0-17.4-3.2-23.6-9.5-7-6.3-9.4-14-9.7-23.2v-33.3c.3-9.1 3.7-16.9 10-23.2 6.3-6.3 14.1-9.6 23.3-10 9.2.4 17 3.7 23.3 10z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://eanyang7.com" target="_blank" rel="noopener" title="个人主页" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M112 48a48 48 0 1 1 96 0 48 48 0 1 1-96 0zm40 304v128c0 17.7-14.3 32-32 32s-32-14.3-32-32V256.9l-28.6 47.6c-9.1 15.1-28.8 20-43.9 10.9s-20-28.8-10.9-43.9l58.3-97c17.4-28.9 48.6-46.6 82.3-46.6h29.7c33.7 0 64.9 17.7 82.3 46.6l58.3 97c9.1 15.1 4.2 34.8-10.9 43.9s-34.8 4.2-43.9-10.9L232 256.9V480c0 17.7-14.3 32-32 32s-32-14.3-32-32V352h-16z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.tracking", "navigation.prune", "navigation.top", "toc.follow", "header.autohide", "navigation.footer", "search.suggest", "search.highlight", "search.share", "content.action.edit", "content.action.view", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.6c14ae12.min.js"></script>
+      
+    
+  </body>
+</html>

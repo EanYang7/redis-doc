@@ -1,0 +1,1492 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Server-assisted, client-side caching in Redis
+">
+      
+      
+        <meta name="author" content="Ean Yang">
+      
+      
+        <link rel="canonical" href="https://eanyang7.github.io/redis-doc/6-manual/client-side-caching/">
+      
+      
+        <link rel="prev" href="../_index/">
+      
+      
+        <link rel="next" href="../keyspace-notifications/">
+      
+      
+      <link rel="icon" href="../../assets/favicon.jpg">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.12">
+    
+    
+      
+        <title>Client-side caching in Redis - redis 文档</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.fad675c6.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.356b1318.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="red" data-md-color-accent="deep-purple">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#there-are-two-hard-problems-in-computer-science" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../.." title="redis 文档" class="md-header__button md-logo" aria-label="redis 文档" data-md-component="logo">
+      
+  <img src="../../assets/logo.jpg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            redis 文档
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Client-side caching in Redis
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="red" data-md-color-accent="deep-purple"  aria-label="切换为暗黑模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换为暗黑模式" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5c-.84 0-1.65.15-2.39.42L12 2M3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29L3.34 7m.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14L3.36 17M20.65 7l-1.77 3.79a7.023 7.023 0 0 0-2.38-4.15l4.15.36m-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29L20.64 17M12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44L12 22Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="red"  aria-label="切换为浅色模式"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="切换为浅色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3 3.19.09m3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95 2.06.05m-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7 0-.24-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91 1.61 0 2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08Z"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/EanYang7/redis-doc" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M186.1 328.7c0 20.9-10.9 55.1-36.7 55.1s-36.7-34.2-36.7-55.1 10.9-55.1 36.7-55.1 36.7 34.2 36.7 55.1zM480 278.2c0 31.9-3.2 65.7-17.5 95-37.9 76.6-142.1 74.8-216.7 74.8-75.8 0-186.2 2.7-225.6-74.8-14.6-29-20.2-63.1-20.2-95 0-41.9 13.9-81.5 41.5-113.6-5.2-15.8-7.7-32.4-7.7-48.8 0-21.5 4.9-32.3 14.6-51.8 45.3 0 74.3 9 108.8 36 29-6.9 58.8-10 88.7-10 27 0 54.2 2.9 80.4 9.2 34-26.7 63-35.2 107.8-35.2 9.8 19.5 14.6 30.3 14.6 51.8 0 16.4-2.6 32.7-7.7 48.2 27.5 32.4 39 72.3 39 114.2zm-64.3 50.5c0-43.9-26.7-82.6-73.5-82.6-18.9 0-37 3.4-56 6-14.9 2.3-29.8 3.2-45.1 3.2-15.2 0-30.1-.9-45.1-3.2-18.7-2.6-37-6-56-6-46.8 0-73.5 38.7-73.5 82.6 0 87.8 80.4 101.3 150.4 101.3h48.2c70.3 0 150.6-13.4 150.6-101.3zm-82.6-55.1c-25.8 0-36.7 34.2-36.7 55.1s10.9 55.1 36.7 55.1 36.7-34.2 36.7-55.1-10.9-55.1-36.7-55.1z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    github仓库
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="redis 文档" class="md-nav__button md-logo" aria-label="redis 文档" data-md-component="logo">
+      
+  <img src="../../assets/logo.jpg" alt="logo">
+
+    </a>
+    redis 文档
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/EanYang7/redis-doc" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M186.1 328.7c0 20.9-10.9 55.1-36.7 55.1s-36.7-34.2-36.7-55.1 10.9-55.1 36.7-55.1 36.7 34.2 36.7 55.1zM480 278.2c0 31.9-3.2 65.7-17.5 95-37.9 76.6-142.1 74.8-216.7 74.8-75.8 0-186.2 2.7-225.6-74.8-14.6-29-20.2-63.1-20.2-95 0-41.9 13.9-81.5 41.5-113.6-5.2-15.8-7.7-32.4-7.7-48.8 0-21.5 4.9-32.3 14.6-51.8 45.3 0 74.3 9 108.8 36 29-6.9 58.8-10 88.7-10 27 0 54.2 2.9 80.4 9.2 34-26.7 63-35.2 107.8-35.2 9.8 19.5 14.6 30.3 14.6 51.8 0 16.4-2.6 32.7-7.7 48.2 27.5 32.4 39 72.3 39 114.2zm-64.3 50.5c0-43.9-26.7-82.6-73.5-82.6-18.9 0-37 3.4-56 6-14.9 2.3-29.8 3.2-45.1 3.2-15.2 0-30.1-.9-45.1-3.2-18.7-2.6-37-6-56-6-46.8 0-73.5 38.7-73.5 82.6 0 87.8 80.4 101.3 150.4 101.3h48.2c70.3 0 150.6-13.4 150.6-101.3zm-82.6-55.1c-25.8 0-36.7 34.2-36.7 55.1s10.9 55.1 36.7 55.1 36.7-34.2 36.7-55.1-10.9-55.1-36.7-55.1z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    github仓库
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Documentation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../0-about/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    0 about
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../1-get-started/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    1 get started
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../2-install/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    2 install
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../3-connect/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    3 connect
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../4-data-types/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    4 data types
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../5-interact/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    5 interact
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    6 manual
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            6 manual
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../_index/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Use Redis
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Client-side caching in Redis
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Client-side caching in Redis
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#there-are-two-hard-problems-in-computer-science" class="md-nav__link">
+    <span class="md-ellipsis">
+      There are two hard problems in computer science...
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-redis-implementation-of-client-side-caching" class="md-nav__link">
+    <span class="md-ellipsis">
+      The Redis implementation of client-side caching
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#two-connections-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      Two connections mode
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-tracking-tracks" class="md-nav__link">
+    <span class="md-ellipsis">
+      What tracking tracks
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#opt-in-caching" class="md-nav__link">
+    <span class="md-ellipsis">
+      Opt-in caching
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#broadcasting-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      Broadcasting mode
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-noloop-option" class="md-nav__link">
+    <span class="md-ellipsis">
+      The NOLOOP option
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#avoiding-race-conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Avoiding race conditions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-to-do-when-losing-connection-with-the-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      What to do when losing connection with the server
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-to-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      What to cache
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#other-hints-for-implementing-client-libraries" class="md-nav__link">
+    <span class="md-ellipsis">
+      Other hints for implementing client libraries
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limiting-the-amount-of-memory-used-by-redis" class="md-nav__link">
+    <span class="md-ellipsis">
+      Limiting the amount of memory used by Redis
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../keyspace-notifications/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis keyspace notifications
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../keyspace/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Keyspace
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../patterns/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    Patterns
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../pipelining/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    Pipelining
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../7-management/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    7 management
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../8-reference/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    8 reference
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#there-are-two-hard-problems-in-computer-science" class="md-nav__link">
+    <span class="md-ellipsis">
+      There are two hard problems in computer science...
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-redis-implementation-of-client-side-caching" class="md-nav__link">
+    <span class="md-ellipsis">
+      The Redis implementation of client-side caching
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#two-connections-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      Two connections mode
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-tracking-tracks" class="md-nav__link">
+    <span class="md-ellipsis">
+      What tracking tracks
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#opt-in-caching" class="md-nav__link">
+    <span class="md-ellipsis">
+      Opt-in caching
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#broadcasting-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      Broadcasting mode
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-noloop-option" class="md-nav__link">
+    <span class="md-ellipsis">
+      The NOLOOP option
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#avoiding-race-conditions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Avoiding race conditions
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-to-do-when-losing-connection-with-the-server" class="md-nav__link">
+    <span class="md-ellipsis">
+      What to do when losing connection with the server
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-to-cache" class="md-nav__link">
+    <span class="md-ellipsis">
+      What to cache
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#other-hints-for-implementing-client-libraries" class="md-nav__link">
+    <span class="md-ellipsis">
+      Other hints for implementing client libraries
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limiting-the-amount-of-memory-used-by-redis" class="md-nav__link">
+    <span class="md-ellipsis">
+      Limiting the amount of memory used by Redis
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+    <a href="https://github.com/EanYang7/redis-doc/tree/main/docs/6-manual/client-side-caching.md" title="编辑此页" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/EanYang7/redis-doc/tree/main/docs/6-manual/client-side-caching.md" title="查看本页的源代码" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0 8a5 5 0 0 1-5-5 5 5 0 0 1 5-5 5 5 0 0 1 5 5 5 5 0 0 1-5 5m0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5Z"/></svg>
+    </a>
+  
+
+
+  <h1>Client-side caching in Redis</h1>
+
+<p>Client-side caching is a technique used to create high performance services.
+It exploits the memory available on application servers, servers that are
+usually distinct computers compared to the database nodes, to store some subset
+of the database information directly in the application side.</p>
+<p>Normally when data is required, the application servers ask the database about
+such information, like in the following diagram:</p>
+<div class="highlight"><pre><span></span><code>+-------------+                                +----------+
+|             | ------- GET user:1234 -------&gt; |          |
+| Application |                                | Database |
+|             | &lt;---- username = Alice ------- |          |
++-------------+                                +----------+
+</code></pre></div>
+<p>When client-side caching is used, the application will store the reply of
+popular queries directly inside the application memory, so that it can
+reuse such replies later, without contacting the database again:</p>
+<div class="highlight"><pre><span></span><code>+-------------+                                +----------+
+|             |                                |          |
+| Application |       ( No chat needed )       | Database |
+|             |                                |          |
++-------------+                                +----------+
+| Local cache |
+|             |
+| user:1234 = |
+| username    |
+| Alice       |
++-------------+
+</code></pre></div>
+<p>While the application memory used for the local cache may not be very big,
+the time needed in order to access the local computer memory is orders of
+magnitude smaller compared to accessing a networked service like a database.
+Since often the same small percentage of data are accessed frequently,
+this pattern can greatly reduce the latency for the application to get data
+and, at the same time, the load in the database side.</p>
+<p>Moreover there are many datasets where items change very infrequently.
+For instance, most user posts in a social network are either immutable or
+rarely edited by the user. Adding to this the fact that usually a small
+percentage of the posts are very popular, either because a small set of users
+have a lot of followers and/or because recent posts have a lot more
+visibility, it is clear why such a pattern can be very useful.</p>
+<p>Usually the two key advantages of client-side caching are:</p>
+<ol>
+<li>Data is available with a very small latency.</li>
+<li>The database system receives less queries, allowing it to serve the same dataset with a smaller number of nodes.</li>
+</ol>
+<h2 id="there-are-two-hard-problems-in-computer-science">There are two hard problems in computer science...<a class="headerlink" href="#there-are-two-hard-problems-in-computer-science" title="Permanent link">⚓︎</a></h2>
+<p>A problem with the above pattern is how to invalidate the information that
+the application is holding, in order to avoid presenting stale data to the
+user. For example after the application above locally cached the information
+for user:1234, Alice may update her username to Flora. Yet the application
+may continue to serve the old username for user:1234.</p>
+<p>Sometimes, depending on the exact application we are modeling, this isn't a
+big deal, so the client will just use a fixed maximum "time to live" for the
+cached information. Once a given amount of time has elapsed, the information
+will no longer be considered valid. More complex patterns, when using Redis,
+leverage the Pub/Sub system in order to send invalidation messages to
+listening clients. This can be made to work but is tricky and costly from
+the point of view of the bandwidth used, because often such patterns involve
+sending the invalidation messages to every client in the application, even
+if certain clients may not have any copy of the invalidated data. Moreover
+every application query altering the data requires to use the <code>PUBLISH</code>
+command, costing the database more CPU time to process this command.</p>
+<p>Regardless of what schema is used, there is a simple fact: many very large
+applications implement some form of client-side caching, because it is the
+next logical step to having a fast store or a fast cache server. For this
+reason Redis 6 implements direct support for client-side caching, in order
+to make this pattern much simpler to implement, more accessible, reliable,
+and efficient.</p>
+<h2 id="the-redis-implementation-of-client-side-caching">The Redis implementation of client-side caching<a class="headerlink" href="#the-redis-implementation-of-client-side-caching" title="Permanent link">⚓︎</a></h2>
+<p>The Redis client-side caching support is called <em>Tracking</em>, and has two modes:</p>
+<ul>
+<li>In the default mode, the server remembers what keys a given client accessed, and sends invalidation messages when the same keys are modified. This costs memory in the server side, but sends invalidation messages only for the set of keys that the client might have in memory.</li>
+<li>In the <em>broadcasting</em> mode, the server does not attempt to remember what keys a given client accessed, so this mode costs no memory at all in the server side. Instead clients subscribe to key prefixes such as <code>object:</code> or <code>user:</code>, and receive a notification message every time a key matching a subscribed prefix is touched.</li>
+</ul>
+<p>To recap, for now let's forget for a moment about the broadcasting mode, to
+focus on the first mode. We'll describe broadcasting in more detail later.</p>
+<ol>
+<li>Clients can enable tracking if they want. Connections start without tracking enabled.</li>
+<li>When tracking is enabled, the server remembers what keys each client requested during the connection lifetime (by sending read commands about such keys).</li>
+<li>When a key is modified by some client, or is evicted because it has an associated expire time, or evicted because of a <em>maxmemory</em> policy, all the clients with tracking enabled that may have the key cached, are notified with an <em>invalidation message</em>.</li>
+<li>When clients receive invalidation messages, they are required to remove the corresponding keys, in order to avoid serving stale data.</li>
+</ol>
+<p>This is an example of the protocol:</p>
+<ul>
+<li>Client 1 <code>-&gt;</code> Server: CLIENT TRACKING ON</li>
+<li>Client 1 <code>-&gt;</code> Server: GET foo</li>
+<li>(The server remembers that Client 1 may have the key "foo" cached)</li>
+<li>(Client 1 may remember the value of "foo" inside its local memory)</li>
+<li>Client 2 <code>-&gt;</code> Server: SET foo SomeOtherValue</li>
+<li>Server <code>-&gt;</code> Client 1: INVALIDATE "foo"</li>
+</ul>
+<p>This looks great superficially, but if you imagine 10k connected clients all
+asking for millions of keys over long living connection, the server ends up
+storing too much information. For this reason Redis uses two key ideas in
+order to limit the amount of memory used server-side and the CPU cost of
+handling the data structures implementing the feature:</p>
+<ul>
+<li>The server remembers the list of clients that may have cached a given key in a single global table. This table is called the <strong>Invalidation Table</strong>. The invalidation table can contain a maximum number of entries. If a new key is inserted, the server may evict an older entry by pretending that such key was modified (even if it was not), and sending an invalidation message to the clients. Doing so, it can reclaim the memory used for this key, even if this will force the clients having a local copy of the key to evict it.</li>
+<li>Inside the invalidation table we don't really need to store pointers to clients' structures, that would force a garbage collection procedure when the client disconnects: instead what we do is just store client IDs (each Redis client has a unique numerical ID). If a client disconnects, the information will be incrementally garbage collected as caching slots are invalidated.</li>
+<li>There is a single keys namespace, not divided by database numbers. So if a client is caching the key <code>foo</code> in database 2, and some other client changes the value of the key <code>foo</code> in database 3, an invalidation message will still be sent. This way we can ignore database numbers reducing both the memory usage and the implementation complexity.</li>
+</ul>
+<h2 id="two-connections-mode">Two connections mode<a class="headerlink" href="#two-connections-mode" title="Permanent link">⚓︎</a></h2>
+<p>Using the new version of the Redis protocol, RESP3, supported by Redis 6, it is possible to run the data queries and receive the invalidation messages in the same connection. However many client implementations may prefer to implement client-side caching using two separated connections: one for data, and one for invalidation messages. For this reason when a client enables tracking, it can specify to redirect the invalidation messages to another connection by specifying the "client ID" of a different connection. Many data connections can redirect invalidation messages to the same connection, this is useful for clients implementing connection pooling. The two connections model is the only one that is also supported for RESP2 (which lacks the ability to multiplex different kind of information in the same connection).</p>
+<p>Here's an example of a complete session using the Redis protocol in the old RESP2 mode involving the following steps: enabling tracking redirecting to another connection, asking for a key, and getting an invalidation message once the key gets modified.</p>
+<p>To start, the client opens a first connection that will be used for invalidations, requests the connection ID, and subscribes via Pub/Sub to the special channel that is used to get invalidation messages when in RESP2 modes (remember that RESP2 is the usual Redis protocol, and not the more advanced protocol that you can use, optionally, with Redis 6 using the <code>HELLO</code> command):</p>
+<div class="highlight"><pre><span></span><code>(Connection 1 -- used for invalidations)
+CLIENT ID
+:4
+SUBSCRIBE __redis__:invalidate
+*3
+$9
+subscribe
+$20
+__redis__:invalidate
+:1
+</code></pre></div>
+<p>Now we can enable tracking from the data connection:</p>
+<div class="highlight"><pre><span></span><code>(Connection 2 -- data connection)
+CLIENT TRACKING on REDIRECT 4
++OK
+
+GET foo
+$3
+bar
+</code></pre></div>
+<p>The client may decide to cache <code>"foo" =&gt; "bar"</code> in the local memory.</p>
+<p>A different client will now modify the value of the "foo" key:</p>
+<div class="highlight"><pre><span></span><code>(Some other unrelated connection)
+SET foo bar
++OK
+</code></pre></div>
+<p>As a result, the invalidations connection will receive a message that invalidates the specified key.</p>
+<p><div class="highlight"><pre><span></span><code>(Connection 1 -- used for invalidations)
+*3
+$7
+message
+$20
+__redis__:invalidate
+*1
+$3
+foo
+</code></pre></div>
+The client will check if there are cached keys in this caching slot, and will evict the information that is no longer valid.</p>
+<p>Note that the third element of the Pub/Sub message is not a single key but
+is a Redis array with just a single element. Since we send an array, if there
+are groups of keys to invalidate, we can do that in a single message.
+In case of a flush (<code>FLUSHALL</code> or <code>FLUSHDB</code>), a <code>null</code> message will be sent.</p>
+<p>A very important thing to understand about client-side caching used with
+RESP2 and a Pub/Sub connection in order to read the invalidation messages,
+is that using Pub/Sub is entirely a trick <strong>in order to reuse old client
+implementations</strong>, but actually the message is not really sent to a channel
+and received by all the clients subscribed to it. Only the connection we
+specified in the <code>REDIRECT</code> argument of the <code>CLIENT</code> command will actually
+receive the Pub/Sub message, making the feature a lot more scalable.</p>
+<p>When RESP3 is used instead, invalidation messages are sent (either in the
+same connection, or in the secondary connection when redirection is used)
+as <code>push</code> messages (read the RESP3 specification for more information).</p>
+<h2 id="what-tracking-tracks">What tracking tracks<a class="headerlink" href="#what-tracking-tracks" title="Permanent link">⚓︎</a></h2>
+<p>As you can see clients do not need, by default, to tell the server what keys
+they are caching. Every key that is mentioned in the context of a read-only
+command is tracked by the server, because it <em>could be cached</em>.</p>
+<p>This has the obvious advantage of not requiring the client to tell the server
+what it is caching. Moreover in many clients implementations, this is what
+you want, because a good solution could be to just cache everything that is not
+already cached, using a first-in first-out approach: we may want to cache a
+fixed number of objects, every new data we retrieve, we could cache it,
+discarding the oldest cached object. More advanced implementations may instead
+drop the least used object or alike.</p>
+<p>Note that anyway if there is write traffic on the server, caching slots
+will get invalidated during the course of the time. In general when the
+server assumes that what we get we also cache, we are making a tradeoff:</p>
+<ol>
+<li>It is more efficient when the client tends to cache many things with a policy that welcomes new objects.</li>
+<li>The server will be forced to retain more data about the client keys.</li>
+<li>The client will receive useless invalidation messages about objects it did not cache.</li>
+</ol>
+<p>So there is an alternative described in the next section.</p>
+<h2 id="opt-in-caching">Opt-in caching<a class="headerlink" href="#opt-in-caching" title="Permanent link">⚓︎</a></h2>
+<p>Clients implementations may want to cache only selected keys, and communicate
+explicitly to the server what they'll cache and what they will not. This will
+require more bandwidth when caching new objects, but at the same time reduces
+the amount of data that the server has to remember and the amount of
+invalidation messages received by the client.</p>
+<p>In order to do this, tracking must be enabled using the OPTIN option:</p>
+<div class="highlight"><pre><span></span><code>CLIENT TRACKING on REDIRECT 1234 OPTIN
+</code></pre></div>
+<p>In this mode, by default, keys mentioned in read queries <em>are not supposed to be cached</em>, instead when a client wants to cache something, it must send a special command immediately before the actual command to retrieve the data:</p>
+<div class="highlight"><pre><span></span><code>CLIENT CACHING YES
++OK
+GET foo
+&quot;bar&quot;
+</code></pre></div>
+<p>The <code>CACHING</code> command affects the command executed immediately after it,
+however in case the next command is <code>MULTI</code>, all the commands in the
+transaction will be tracked. Similarly in case of Lua scripts, all the
+commands executed by the script will be tracked.</p>
+<h2 id="broadcasting-mode">Broadcasting mode<a class="headerlink" href="#broadcasting-mode" title="Permanent link">⚓︎</a></h2>
+<p>So far we described the first client-side caching model that Redis implements.
+There is another one, called broadcasting, that sees the problem from the
+point of view of a different tradeoff, does not consume any memory on the
+server side, but instead sends more invalidation messages to clients.
+In this mode we have the following main behaviors:</p>
+<ul>
+<li>Clients enable client-side caching using the <code>BCAST</code> option, specifying one or more prefixes using the <code>PREFIX</code> option. For instance: <code>CLIENT TRACKING on REDIRECT 10 BCAST PREFIX object: PREFIX user:</code>. If no prefix is specified at all, the prefix is assumed to be the empty string, so the client will receive invalidation messages for every key that gets modified. Instead if one or more prefixes are used, only keys matching one of the specified prefixes will be sent in the invalidation messages.</li>
+<li>The server does not store anything in the invalidation table. Instead it uses a different <strong>Prefixes Table</strong>, where each prefix is associated to a list of clients.</li>
+<li>No two prefixes can track overlapping parts of the keyspace. For instance, having the prefix "foo" and "foob" would not be allowed, since they would both trigger an invalidation for the key "foobar". However, just using the prefix "foo" is sufficient.</li>
+<li>Every time a key matching any of the prefixes is modified, all the clients subscribed to that prefix, will receive the invalidation message.</li>
+<li>The server will consume CPU proportional to the number of registered prefixes. If you have just a few, it is hard to see any difference. With a big number of prefixes the CPU cost can become quite large.</li>
+<li>In this mode the server can perform the optimization of creating a single reply for all the clients subscribed to a given prefix, and send the same reply to all. This helps to lower the CPU usage.</li>
+</ul>
+<h2 id="the-noloop-option">The NOLOOP option<a class="headerlink" href="#the-noloop-option" title="Permanent link">⚓︎</a></h2>
+<p>By default client-side tracking will send invalidation messages to the
+client that modified the key. Sometimes clients want this, since they
+implement very basic logic that does not involve automatically caching
+writes locally. However, more advanced clients may want to cache even the
+writes they are doing in the local in-memory table. In such case receiving
+an invalidation message immediately after the write is a problem, since it
+will force the client to evict the value it just cached.</p>
+<p>In this case it is possible to use the <code>NOLOOP</code> option: it works both
+in normal and broadcasting mode. Using this option, clients are able to
+tell the server they don't want to receive invalidation messages for keys
+that they modified.</p>
+<h2 id="avoiding-race-conditions">Avoiding race conditions<a class="headerlink" href="#avoiding-race-conditions" title="Permanent link">⚓︎</a></h2>
+<p>When implementing client-side caching redirecting the invalidation messages
+to a different connection, you should be aware that there is a possible
+race condition. See the following example interaction, where we'll call
+the data connection "D" and the invalidation connection "I":</p>
+<div class="highlight"><pre><span></span><code>[D] client -&gt; server: GET foo
+[I] server -&gt; client: Invalidate foo (somebody else touched it)
+[D] server -&gt; client: &quot;bar&quot; (the reply of &quot;GET foo&quot;)
+</code></pre></div>
+<p>As you can see, because the reply to the GET was slower to reach the
+client, we received the invalidation message before the actual data that
+is already no longer valid. So we'll keep serving a stale version of the
+foo key. To avoid this problem, it is a good idea to populate the cache
+when we send the command with a placeholder:</p>
+<div class="highlight"><pre><span></span><code>Client cache: set the local copy of &quot;foo&quot; to &quot;caching-in-progress&quot;
+[D] client-&gt; server: GET foo.
+[I] server -&gt; client: Invalidate foo (somebody else touched it)
+Client cache: delete &quot;foo&quot; from the local cache.
+[D] server -&gt; client: &quot;bar&quot; (the reply of &quot;GET foo&quot;)
+Client cache: don&#39;t set &quot;bar&quot; since the entry for &quot;foo&quot; is missing.
+</code></pre></div>
+<p>Such a race condition is not possible when using a single connection for both
+data and invalidation messages, since the order of the messages is always known
+in that case.</p>
+<h2 id="what-to-do-when-losing-connection-with-the-server">What to do when losing connection with the server<a class="headerlink" href="#what-to-do-when-losing-connection-with-the-server" title="Permanent link">⚓︎</a></h2>
+<p>Similarly, if we lost the connection with the socket we use in order to
+get the invalidation messages, we may end with stale data. In order to avoid
+this problem, we need to do the following things:</p>
+<ol>
+<li>Make sure that if the connection is lost, the local cache is flushed.</li>
+<li>Both when using RESP2 with Pub/Sub, or RESP3, ping the invalidation channel periodically (you can send PING commands even when the connection is in Pub/Sub mode!). If the connection looks broken and we are not able to receive ping backs, after a maximum amount of time, close the connection and flush the cache.</li>
+</ol>
+<h2 id="what-to-cache">What to cache<a class="headerlink" href="#what-to-cache" title="Permanent link">⚓︎</a></h2>
+<p>Clients may want to run internal statistics about the number of times
+a given cached key was actually served in a request, to understand in the
+future what is good to cache. In general:</p>
+<ul>
+<li>We don't want to cache many keys that change continuously.</li>
+<li>We don't want to cache many keys that are requested very rarely.</li>
+<li>We want to cache keys that are requested often and change at a reasonable rate. For an example of key not changing at a reasonable rate, think of a global counter that is continuously <code>INCR</code>emented.</li>
+</ul>
+<p>However simpler clients may just evict data using some random sampling just
+remembering the last time a given cached value was served, trying to evict
+keys that were not served recently.</p>
+<h2 id="other-hints-for-implementing-client-libraries">Other hints for implementing client libraries<a class="headerlink" href="#other-hints-for-implementing-client-libraries" title="Permanent link">⚓︎</a></h2>
+<ul>
+<li>Handling TTLs: make sure you also request the key TTL and set the TTL in the local cache if you want to support caching keys with a TTL.</li>
+<li>Putting a max TTL on every key is a good idea, even if it has no TTL. This protects against bugs or connection issues that would make the client have old data in the local copy.</li>
+<li>Limiting the amount of memory used by clients is absolutely needed. There must be a way to evict old keys when new ones are added.</li>
+</ul>
+<h2 id="limiting-the-amount-of-memory-used-by-redis">Limiting the amount of memory used by Redis<a class="headerlink" href="#limiting-the-amount-of-memory-used-by-redis" title="Permanent link">⚓︎</a></h2>
+<p>Be sure to configure a suitable value for the maximum number of keys remembered by Redis or alternatively use the BCAST mode that consumes no memory at all on the Redis side. Note that the memory consumed by Redis when BCAST is not used, is proportional both to the number of keys tracked and the number of clients requesting such keys.</p>
+
+  <hr>
+<div class="md-source-file">
+  <small>
+    
+      最后更新:
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 25, 2023</span>
+      
+        <br>
+        创建日期:
+        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 25, 2023</span>
+      
+    
+  </small>
+</div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../_index/" class="md-footer__link md-footer__link--prev" aria-label="上一页: Use Redis">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                Use Redis
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../keyspace-notifications/" class="md-footer__link md-footer__link--next" aria-label="下一页: Redis keyspace notifications">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                Redis keyspace notifications
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2023 Ean Yang
+    </div>
+  
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/YQisme" target="_blank" rel="noopener" title="github主页" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://space.bilibili.com/244185393?spm_id_from=333.788.0.0" target="_blank" rel="noopener" title="b站主页" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M488.6 104.1c16.7 18.1 24.4 39.7 23.3 65.7v202.4c-.4 26.4-9.2 48.1-26.5 65.1-17.2 17-39.1 25.9-65.5 26.7H92.02c-26.45-.8-48.21-9.8-65.28-27.2C9.682 419.4.767 396.5 0 368.2V169.8c.767-26 9.682-47.6 26.74-65.7C43.81 87.75 65.57 78.77 92.02 78h29.38L96.05 52.19c-5.75-5.73-8.63-13-8.63-21.79 0-8.8 2.88-16.06 8.63-21.797C101.8 2.868 109.1 0 117.9 0s16.1 2.868 21.9 8.603L213.1 78h88l74.5-69.397C381.7 2.868 389.2 0 398 0c8.8 0 16.1 2.868 21.9 8.603 5.7 5.737 8.6 12.997 8.6 21.797 0 8.79-2.9 16.06-8.6 21.79L394.6 78h29.3c26.4.77 48 9.75 64.7 26.1zm-38.8 69.7c-.4-9.6-3.7-17.4-10.7-23.5-5.2-6.1-14-9.4-22.7-9.8H96.05c-9.59.4-17.45 3.7-23.58 9.8-6.14 6.1-9.4 13.9-9.78 23.5v194.4c0 9.2 3.26 17 9.78 23.5s14.38 9.8 23.58 9.8H416.4c9.2 0 17-3.3 23.3-9.8 6.3-6.5 9.7-14.3 10.1-23.5V173.8zm-264.3 42.7c6.3 6.3 9.7 14.1 10.1 23.2V273c-.4 9.2-3.7 16.9-9.8 23.2-6.2 6.3-14 9.5-23.6 9.5-9.6 0-17.5-3.2-23.6-9.5-6.1-6.3-9.4-14-9.8-23.2v-33.3c.4-9.1 3.8-16.9 10.1-23.2 6.3-6.3 13.2-9.6 23.3-10 9.2.4 17 3.7 23.3 10zm191.5 0c6.3 6.3 9.7 14.1 10.1 23.2V273c-.4 9.2-3.7 16.9-9.8 23.2-6.1 6.3-14 9.5-23.6 9.5-9.6 0-17.4-3.2-23.6-9.5-7-6.3-9.4-14-9.7-23.2v-33.3c.3-9.1 3.7-16.9 10-23.2 6.3-6.3 14.1-9.6 23.3-10 9.2.4 17 3.7 23.3 10z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://eanyang7.com" target="_blank" rel="noopener" title="个人主页" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M112 48a48 48 0 1 1 96 0 48 48 0 1 1-96 0zm40 304v128c0 17.7-14.3 32-32 32s-32-14.3-32-32V256.9l-28.6 47.6c-9.1 15.1-28.8 20-43.9 10.9s-20-28.8-10.9-43.9l58.3-97c17.4-28.9 48.6-46.6 82.3-46.6h29.7c33.7 0 64.9 17.7 82.3 46.6l58.3 97c9.1 15.1 4.2 34.8-10.9 43.9s-34.8 4.2-43.9-10.9L232 256.9V480c0 17.7-14.3 32-32 32s-32-14.3-32-32V352h-16z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.tracking", "navigation.prune", "navigation.top", "toc.follow", "header.autohide", "navigation.footer", "search.suggest", "search.highlight", "search.share", "content.action.edit", "content.action.view", "content.code.copy"], "search": "../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.6c14ae12.min.js"></script>
+      
+    
+  </body>
+</html>

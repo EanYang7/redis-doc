@@ -1,0 +1,1789 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A description of the Redis virtual memory system that was deprecated in 2.6. This document exists for historical interest.">
+      
+      
+        <meta name="author" content="Ean Yang">
+      
+      
+        <link rel="canonical" href="https://eanyang7.github.io/redis-doc/8-reference/internals/internals-vm/">
+      
+      
+        <link rel="prev" href="../internals-sds/">
+      
+      
+        <link rel="next" href="../rdd/">
+      
+      
+      <link rel="icon" href="../../../assets/favicon.jpg">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.12">
+    
+    
+      
+        <title>Virtual memory (deprecated) - redis 文档</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.fad675c6.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.356b1318.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="red" data-md-color-accent="deep-purple">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#keys-vs-values-what-is-swapped-out" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="redis 文档" class="md-header__button md-logo" aria-label="redis 文档" data-md-component="logo">
+      
+  <img src="../../../assets/logo.jpg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            redis 文档
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Virtual memory (deprecated)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="red" data-md-color-accent="deep-purple"  aria-label="切换为暗黑模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换为暗黑模式" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5c-.84 0-1.65.15-2.39.42L12 2M3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29L3.34 7m.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14L3.36 17M20.65 7l-1.77 3.79a7.023 7.023 0 0 0-2.38-4.15l4.15.36m-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29L20.64 17M12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44L12 22Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="red"  aria-label="切换为浅色模式"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="切换为浅色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3 3.19.09m3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95 2.06.05m-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7 0-.24-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91 1.61 0 2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08Z"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/EanYang7/redis-doc" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M186.1 328.7c0 20.9-10.9 55.1-36.7 55.1s-36.7-34.2-36.7-55.1 10.9-55.1 36.7-55.1 36.7 34.2 36.7 55.1zM480 278.2c0 31.9-3.2 65.7-17.5 95-37.9 76.6-142.1 74.8-216.7 74.8-75.8 0-186.2 2.7-225.6-74.8-14.6-29-20.2-63.1-20.2-95 0-41.9 13.9-81.5 41.5-113.6-5.2-15.8-7.7-32.4-7.7-48.8 0-21.5 4.9-32.3 14.6-51.8 45.3 0 74.3 9 108.8 36 29-6.9 58.8-10 88.7-10 27 0 54.2 2.9 80.4 9.2 34-26.7 63-35.2 107.8-35.2 9.8 19.5 14.6 30.3 14.6 51.8 0 16.4-2.6 32.7-7.7 48.2 27.5 32.4 39 72.3 39 114.2zm-64.3 50.5c0-43.9-26.7-82.6-73.5-82.6-18.9 0-37 3.4-56 6-14.9 2.3-29.8 3.2-45.1 3.2-15.2 0-30.1-.9-45.1-3.2-18.7-2.6-37-6-56-6-46.8 0-73.5 38.7-73.5 82.6 0 87.8 80.4 101.3 150.4 101.3h48.2c70.3 0 150.6-13.4 150.6-101.3zm-82.6-55.1c-25.8 0-36.7 34.2-36.7 55.1s10.9 55.1 36.7 55.1 36.7-34.2 36.7-55.1-10.9-55.1-36.7-55.1z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    github仓库
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="redis 文档" class="md-nav__button md-logo" aria-label="redis 文档" data-md-component="logo">
+      
+  <img src="../../../assets/logo.jpg" alt="logo">
+
+    </a>
+    redis 文档
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/EanYang7/redis-doc" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M186.1 328.7c0 20.9-10.9 55.1-36.7 55.1s-36.7-34.2-36.7-55.1 10.9-55.1 36.7-55.1 36.7 34.2 36.7 55.1zM480 278.2c0 31.9-3.2 65.7-17.5 95-37.9 76.6-142.1 74.8-216.7 74.8-75.8 0-186.2 2.7-225.6-74.8-14.6-29-20.2-63.1-20.2-95 0-41.9 13.9-81.5 41.5-113.6-5.2-15.8-7.7-32.4-7.7-48.8 0-21.5 4.9-32.3 14.6-51.8 45.3 0 74.3 9 108.8 36 29-6.9 58.8-10 88.7-10 27 0 54.2 2.9 80.4 9.2 34-26.7 63-35.2 107.8-35.2 9.8 19.5 14.6 30.3 14.6 51.8 0 16.4-2.6 32.7-7.7 48.2 27.5 32.4 39 72.3 39 114.2zm-64.3 50.5c0-43.9-26.7-82.6-73.5-82.6-18.9 0-37 3.4-56 6-14.9 2.3-29.8 3.2-45.1 3.2-15.2 0-30.1-.9-45.1-3.2-18.7-2.6-37-6-56-6-46.8 0-73.5 38.7-73.5 82.6 0 87.8 80.4 101.3 150.4 101.3h48.2c70.3 0 150.6-13.4 150.6-101.3zm-82.6-55.1c-25.8 0-36.7 34.2-36.7 55.1s10.9 55.1 36.7 55.1 36.7-34.2 36.7-55.1-10.9-55.1-36.7-55.1z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    github仓库
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Documentation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../0-about/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    0 about
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../1-get-started/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    1 get started
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../2-install/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    2 install
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../3-connect/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    3 connect
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../4-data-types/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    4 data types
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../5-interact/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    5 interact
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../6-manual/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    6 manual
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../7-management/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    7 management
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    8 reference
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_10">
+            <span class="md-nav__icon md-icon"></span>
+            8 reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../_index/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis reference
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../arm/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    ARM support
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../clients/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis client handling
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../cluster-spec/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis cluster specification
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../command-arguments/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis command arguments
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../command-tips/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis command tips
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../gopher/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis and the Gopher protocol
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../key-specs/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Command key specifications
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../protocol-spec/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis serialization protocol specification
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sentinel-clients/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sentinel client spec
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../signals/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis signal handling
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../eviction/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    Eviction
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_10_13" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_10_13" id="__nav_10_13_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Internals
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_10_13_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_10_13">
+            <span class="md-nav__icon md-icon"></span>
+            Internals
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../_index/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis internals
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../internals-rediseventlib/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Event library
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../internals-sds/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    String internals
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Virtual memory (deprecated)
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Virtual memory (deprecated)
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#keys-vs-values-what-is-swapped-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      Keys vs Values: what is swapped out?
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-does-a-swapped-value-looks-like-internally" class="md-nav__link">
+    <span class="md-ellipsis">
+      How does a swapped value looks like internally
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-swap-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      The Swap File
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#transferring-objects-from-memory-to-swap" class="md-nav__link">
+    <span class="md-ellipsis">
+      Transferring objects from memory to swap
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#loading-objects-back-in-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      Loading objects back in memory
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-blocking-vm-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      How blocking VM works
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#blocking-vm-swapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      Blocking VM swapping
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-values-to-swap-when-we-are-out-of-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      What values to swap when we are out of memory?
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#blocking-vm-loading" class="md-nav__link">
+    <span class="md-ellipsis">
+      Blocking VM loading
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#background-saving-when-vm-is-active" class="md-nav__link">
+    <span class="md-ellipsis">
+      Background saving when VM is active
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-problem-with-the-blocking-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      The problem with the blocking VM
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#threaded-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      Threaded VM
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#io-threads" class="md-nav__link">
+    <span class="md-ellipsis">
+      I/O Threads
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#non-blocking-vm-as-probabilistic-enhancement-of-blocking-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      Non blocking VM as probabilistic enhancement of blocking VM
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#blocking-clients-on-swapped-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      Blocking clients on swapped keys
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#aborting-io-jobs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Aborting I/O jobs
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Questions?
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rdd/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis design draft #2 (historical)
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../modules/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    Modules
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#keys-vs-values-what-is-swapped-out" class="md-nav__link">
+    <span class="md-ellipsis">
+      Keys vs Values: what is swapped out?
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-does-a-swapped-value-looks-like-internally" class="md-nav__link">
+    <span class="md-ellipsis">
+      How does a swapped value looks like internally
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-swap-file" class="md-nav__link">
+    <span class="md-ellipsis">
+      The Swap File
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#transferring-objects-from-memory-to-swap" class="md-nav__link">
+    <span class="md-ellipsis">
+      Transferring objects from memory to swap
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#loading-objects-back-in-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      Loading objects back in memory
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-blocking-vm-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      How blocking VM works
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#blocking-vm-swapping" class="md-nav__link">
+    <span class="md-ellipsis">
+      Blocking VM swapping
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-values-to-swap-when-we-are-out-of-memory" class="md-nav__link">
+    <span class="md-ellipsis">
+      What values to swap when we are out of memory?
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#blocking-vm-loading" class="md-nav__link">
+    <span class="md-ellipsis">
+      Blocking VM loading
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#background-saving-when-vm-is-active" class="md-nav__link">
+    <span class="md-ellipsis">
+      Background saving when VM is active
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-problem-with-the-blocking-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      The problem with the blocking VM
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#threaded-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      Threaded VM
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#io-threads" class="md-nav__link">
+    <span class="md-ellipsis">
+      I/O Threads
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#non-blocking-vm-as-probabilistic-enhancement-of-blocking-vm" class="md-nav__link">
+    <span class="md-ellipsis">
+      Non blocking VM as probabilistic enhancement of blocking VM
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#blocking-clients-on-swapped-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      Blocking clients on swapped keys
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#aborting-io-jobs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Aborting I/O jobs
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Questions?
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+    <a href="https://github.com/EanYang7/redis-doc/tree/main/docs/8-reference/internals/internals-vm.md" title="编辑此页" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/EanYang7/redis-doc/tree/main/docs/8-reference/internals/internals-vm.md" title="查看本页的源代码" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0 8a5 5 0 0 1-5-5 5 5 0 0 1 5-5 5 5 0 0 1 5 5 5 5 0 0 1-5 5m0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5Z"/></svg>
+    </a>
+  
+
+
+  <h1>Virtual memory (deprecated)</h1>
+
+<p><strong>Note: this document was written by the creator of Redis, Salvatore Sanfilippo, early in the development of Redis (c. 2010). Virtual Memory has been deprecated since Redis 2.6, so this documentation
+is here only for historical interest.</strong></p>
+<p>This document details the internals of the Redis Virtual Memory subsystem prior to Redis 2.6. The intended audience is not the final user but programmers willing to understand or modify the Virtual Memory implementation.</p>
+<h2 id="keys-vs-values-what-is-swapped-out">Keys vs Values: what is swapped out?<a class="headerlink" href="#keys-vs-values-what-is-swapped-out" title="Permanent link">⚓︎</a></h2>
+<p>The goal of the VM subsystem is to free memory transferring Redis Objects from memory to disk. This is a very generic command, but specifically, Redis transfers only objects associated with <em>values</em>. In order to understand better this concept we'll show, using the DEBUG command, how a key holding a value looks from the point of view of the Redis internals:</p>
+<div class="highlight"><pre><span></span><code>redis&gt; set foo bar
+OK
+redis&gt; debug object foo
+Key at:0x100101d00 refcount:1, value at:0x100101ce0 refcount:1 encoding:raw serializedlength:4
+</code></pre></div>
+<p>As you can see from the above output, the Redis top level hash table maps Redis Objects (keys) to other Redis Objects (values). The Virtual Memory is only able to swap <em>values</em> on disk, the objects associated to <em>keys</em> are always taken in memory: this trade off guarantees very good lookup performances, as one of the main design goals of the Redis VM is to have performances similar to Redis with VM disabled when the part of the dataset frequently used fits in RAM.</p>
+<h2 id="how-does-a-swapped-value-looks-like-internally">How does a swapped value looks like internally<a class="headerlink" href="#how-does-a-swapped-value-looks-like-internally" title="Permanent link">⚓︎</a></h2>
+<p>When an object is swapped out, this is what happens in the hash table entry:</p>
+<ul>
+<li>The key continues to hold a Redis Object representing the key.</li>
+<li>The value is set to NULL</li>
+</ul>
+<p>So you may wonder where we store the information that a given value (associated to a given key) was swapped out. Just in the key object!</p>
+<p>This is how the Redis Object structure <em>robj</em> looks like:</p>
+<div class="highlight"><pre><span></span><code>/* The actual Redis Object */
+typedef struct redisObject {
+    void *ptr;
+    unsigned char type;
+    unsigned char encoding;
+    unsigned char storage;  /* If this object is a key, where is the value?
+                             * REDIS_VM_MEMORY, REDIS_VM_SWAPPED, ... */
+    unsigned char vtype; /* If this object is a key, and value is swapped out,
+                          * this is the type of the swapped out object. */
+    int refcount;
+    /* VM fields, this are only allocated if VM is active, otherwise the
+     * object allocation function will just allocate
+     * sizeof(redisObject) minus sizeof(redisObjectVM), so using
+     * Redis without VM active will not have any overhead. */
+    struct redisObjectVM vm;
+} robj;
+</code></pre></div>
+<p>As you can see there are a few fields about VM. The most important one is <em>storage</em>, that can be one of this values:</p>
+<ul>
+<li><code>REDIS_VM_MEMORY</code>: the associated value is in memory.</li>
+<li><code>REDIS_VM_SWAPPED</code>: the associated values is swapped, and the value entry of the hash table is just set to NULL.</li>
+<li><code>REDIS_VM_LOADING</code>: the value is swapped on disk, the entry is NULL, but there is a job to load the object from the swap to the memory (this field is only used when threaded VM is active).</li>
+<li><code>REDIS_VM_SWAPPING</code>: the value is in memory, the entry is a pointer to the actual Redis Object, but there is an I/O job in order to transfer this value to the swap file.</li>
+</ul>
+<p>If an object is swapped on disk (<code>REDIS_VM_SWAPPED</code> or <code>REDIS_VM_LOADING</code>), how do we know where it is stored, what type it is, and so forth? That's simple: the <em>vtype</em> field is set to the original type of the Redis object swapped, while the <em>vm</em> field (that is a <em>redisObjectVM</em> structure) holds information about the location of the object. This is the definition of this additional structure:</p>
+<div class="highlight"><pre><span></span><code>/* The VM object structure */
+struct redisObjectVM {
+    off_t page;         /* the page at which the object is stored on disk */
+    off_t usedpages;    /* number of pages used on disk */
+    time_t atime;       /* Last access time */
+} vm;
+</code></pre></div>
+<p>As you can see the structure contains the page at which the object is located in the swap file, the number of pages used, and the last access time of the object (this is very useful for the algorithm that select what object is a good candidate for swapping, as we want to transfer on disk objects that are rarely accessed).</p>
+<p>As you can see, while all the other fields are using unused bytes in the old Redis Object structure (we had some free bit due to natural memory alignment concerns), the <em>vm</em> field is new, and indeed uses additional memory. Should we pay such a memory cost even when VM is disabled? No! This is the code to create a new Redis Object:</p>
+<div class="highlight"><pre><span></span><code>... some code ...
+        if (server.vm_enabled) {
+            pthread_mutex_unlock(&amp;server.obj_freelist_mutex);
+            o = zmalloc(sizeof(*o));
+        } else {
+            o = zmalloc(sizeof(*o)-sizeof(struct redisObjectVM));
+        }
+... some code ...
+</code></pre></div>
+<p>As you can see if the VM system is not enabled we allocate just <code>sizeof(*o)-sizeof(struct redisObjectVM)</code> of memory. Given that the <em>vm</em> field is the last in the object structure, and that this fields are never accessed if VM is disabled, we are safe and Redis without VM does not pay the memory overhead.</p>
+<h2 id="the-swap-file">The Swap File<a class="headerlink" href="#the-swap-file" title="Permanent link">⚓︎</a></h2>
+<p>The next step in order to understand how the VM subsystem works is understanding how objects are stored inside the swap file. The good news is that's not some kind of special format, we just use the same format used to store the objects in .rdb files, that are the usual dump files produced by Redis using the <code>SAVE</code> command.</p>
+<p>The swap file is composed of a given number of pages, where every page size is a given number of bytes. This parameters can be changed in redis.conf, since different Redis instances may work better with different values: it depends on the actual data you store inside it. The following are the default values:</p>
+<div class="highlight"><pre><span></span><code>vm-page-size 32
+vm-pages 134217728
+</code></pre></div>
+<p>Redis takes a "bitmap" (a contiguous array of bits set to zero or one) in memory, every bit represent a page of the swap file on disk: if a given bit is set to 1, it represents a page that is already used (there is some Redis Object stored there), while if the corresponding bit is zero, the page is free.</p>
+<p>Taking this bitmap (that will call the page table) in memory is a huge win in terms of performances, and the memory used is small: we just need 1 bit for every page on disk. For instance in the example below 134217728 pages of 32 bytes each (4GB swap file) is using just 16 MB of RAM for the page table.</p>
+<h2 id="transferring-objects-from-memory-to-swap">Transferring objects from memory to swap<a class="headerlink" href="#transferring-objects-from-memory-to-swap" title="Permanent link">⚓︎</a></h2>
+<p>In order to transfer an object from memory to disk we need to perform the following steps (assuming non threaded VM, just a simple blocking approach):</p>
+<ul>
+<li>Find how many pages are needed in order to store this object on the swap file. This is trivially accomplished just calling the function <code>rdbSavedObjectPages</code> that returns the number of pages used by an object on disk. Note that this function does not duplicate the .rdb saving code just to understand what will be the length <em>after</em> an object will be saved on disk, we use the trick of opening /dev/null and writing the object there, finally calling <code>ftello</code> in order check the amount of bytes required. What we do basically is to save the object on a virtual very fast file, that is, /dev/null.</li>
+<li>Now that we know how many pages are required in the swap file, we need to find this number of contiguous free pages inside the swap file. This task is accomplished by the <code>vmFindContiguousPages</code> function. As you can guess this function may fail if the swap is full, or so fragmented that we can't easily find the required number of contiguous free pages. When this happens we just abort the swapping of the object, that will continue to live in memory.</li>
+<li>Finally we can write the object on disk, at the specified position, just calling the function <code>vmWriteObjectOnSwap</code>.</li>
+</ul>
+<p>As you can guess once the object was correctly written in the swap file, it is freed from memory, the storage field in the associated key is set to <code>REDIS_VM_SWAPPED</code>, and the used pages are marked as used in the page table.</p>
+<h2 id="loading-objects-back-in-memory">Loading objects back in memory<a class="headerlink" href="#loading-objects-back-in-memory" title="Permanent link">⚓︎</a></h2>
+<p>Loading an object from swap to memory is simpler, as we already know where the object is located and how many pages it is using. We also know the type of the object (the loading functions are required to know this information, as there is no header or any other information about the object type on disk), but this is stored in the <em>vtype</em> field of the associated key as already seen above.</p>
+<p>Calling the function <code>vmLoadObject</code> passing the key object associated to the value object we want to load back is enough. The function will also take care of fixing the storage type of the key (that will be <code>REDIS_VM_MEMORY</code>), marking the pages as freed in the page table, and so forth.</p>
+<p>The return value of the function is the loaded Redis Object itself, that we'll have to set again as value in the main hash table (instead of the NULL value we put in place of the object pointer when the value was originally swapped out).</p>
+<h2 id="how-blocking-vm-works">How blocking VM works<a class="headerlink" href="#how-blocking-vm-works" title="Permanent link">⚓︎</a></h2>
+<p>Now we have all the building blocks in order to describe how the blocking VM works. First of all, an important detail about configuration. In order to enable blocking VM in Redis <code>server.vm_max_threads</code> must be set to zero.
+We'll see later how this max number of threads info is used in the threaded VM, for now all it's needed to now is that Redis reverts to fully blocking VM when this is set to zero.</p>
+<p>We also need to introduce another important VM parameter, that is, <code>server.vm_max_memory</code>. This parameter is very important as it is used in order to trigger swapping: Redis will try to swap objects only if it is using more memory than the max memory setting, otherwise there is no need to swap as we are matching the user requested memory usage.</p>
+<h2 id="blocking-vm-swapping">Blocking VM swapping<a class="headerlink" href="#blocking-vm-swapping" title="Permanent link">⚓︎</a></h2>
+<p>Swapping of object from memory to disk happens in the cron function. This function used to be called every second, while in the recent Redis versions on git it is called every 100 milliseconds (that is, 10 times per second).
+If this function detects we are out of memory, that is, the memory used is greater than the vm-max-memory setting, it starts transferring objects from memory to disk in a loop calling the function <code>vmSwapOneObect</code>. This function takes just one argument, if 0 it will swap objects in a blocking way, otherwise if it is 1, I/O threads are used. In the blocking scenario we just call it with zero as argument.</p>
+<p>vmSwapOneObject acts performing the following steps:</p>
+<ul>
+<li>The key space in inspected in order to find a good candidate for swapping (we'll see later what a good candidate for swapping is).</li>
+<li>The associated value is transferred to disk, in a blocking way.</li>
+<li>The key storage field is set to <code>REDIS_VM_SWAPPED</code>, while the <em>vm</em> fields of the object are set to the right values (the page index where the object was swapped, and the number of pages used to swap it).</li>
+<li>Finally the value object is freed and the value entry of the hash table is set to NULL.</li>
+</ul>
+<p>The function is called again and again until one of the following happens: there is no way to swap more objects because either the swap file is full or nearly all the objects are already transferred on disk, or simply the memory usage is already under the vm-max-memory parameter.</p>
+<h2 id="what-values-to-swap-when-we-are-out-of-memory">What values to swap when we are out of memory?<a class="headerlink" href="#what-values-to-swap-when-we-are-out-of-memory" title="Permanent link">⚓︎</a></h2>
+<p>Understanding what's a good candidate for swapping is not too hard. A few objects at random are sampled, and for each their <em>swappability</em> is commuted as:</p>
+<div class="highlight"><pre><span></span><code>swappability = age*log(size_in_memory)
+</code></pre></div>
+<p>The age is the number of seconds the key was not requested, while size_in_memory is a fast estimation of the amount of memory (in bytes) used by the object in memory. So we try to swap out objects that are rarely accessed, and we try to swap bigger objects over smaller one, but the latter is a less important factor (because of the logarithmic function used). This is because we don't want bigger objects to be swapped out and in too often as the bigger the object the more I/O and CPU is required in order to transfer it.</p>
+<h2 id="blocking-vm-loading">Blocking VM loading<a class="headerlink" href="#blocking-vm-loading" title="Permanent link">⚓︎</a></h2>
+<p>What happens if an operation against a key associated with a swapped out object is requested? For instance Redis may just happen to process the following command:</p>
+<div class="highlight"><pre><span></span><code>GET foo
+</code></pre></div>
+<p>If the value object of the <code>foo</code> key is swapped we need to load it back in memory before processing the operation. In Redis the key lookup process is centralized in the <code>lookupKeyRead</code> and <code>lookupKeyWrite</code> functions, this two functions are used in the implementation of all the Redis commands accessing the keyspace, so we have a single point in the code where to handle the loading of the key from the swap file to memory.</p>
+<p>So this is what happens:</p>
+<ul>
+<li>The user calls some command having as argument a swapped key</li>
+<li>The command implementation calls the lookup function</li>
+<li>The lookup function search for the key in the top level hash table. If the value associated with the requested key is swapped (we can see that checking the <em>storage</em> field of the key object), we load it back in memory in a blocking way before to return to the user.</li>
+</ul>
+<p>This is pretty straightforward, but things will get more <em>interesting</em> with the threads. From the point of view of the blocking VM the only real problem is the saving of the dataset using another process, that is, handling <code>BGSAVE</code> and <code>BGREWRITEAOF</code> commands.</p>
+<h2 id="background-saving-when-vm-is-active">Background saving when VM is active<a class="headerlink" href="#background-saving-when-vm-is-active" title="Permanent link">⚓︎</a></h2>
+<p>The default Redis way to persist on disk is to create .rdb files using a child process. Redis calls the fork() system call in order to create a child, that has the exact copy of the in memory dataset, since fork duplicates the whole program memory space (actually thanks to a technique called Copy on Write memory pages are shared between the parent and child process, so the fork() call will not require too much memory).</p>
+<p>In the child process we have a copy of the dataset in a given point in the time. Other commands issued by clients will just be served by the parent process and will not modify the child data.</p>
+<p>The child process will just store the whole dataset into the dump.rdb file and finally will exit. But what happens when the VM is active? Values can be swapped out so we don't have all the data in memory, and we need to access the swap file in order to retrieve the swapped values. While child process is saving the swap file is shared between the parent and child process, since:</p>
+<ul>
+<li>The parent process needs to access the swap file in order to load values back into memory if an operation against swapped out values are performed.</li>
+<li>The child process needs to access the swap file in order to retrieve the full dataset while saving the data set on disk.</li>
+</ul>
+<p>In order to avoid problems while both the processes are accessing the same swap file we do a simple thing, that is, not allowing values to be swapped out in the parent process while a background saving is in progress. This way both the processes will access the swap file in read only. This approach has the problem that while the child process is saving no new values can be transferred on the swap file even if Redis is using more memory than the max memory parameters dictates. This is usually not a problem as the background saving will terminate in a short amount of time and if still needed a percentage of values will be swapped on disk ASAP.</p>
+<p>An alternative to this scenario is to enable the Append Only File that will have this problem only when a log rewrite is performed using the <code>BGREWRITEAOF</code> command.</p>
+<h2 id="the-problem-with-the-blocking-vm">The problem with the blocking VM<a class="headerlink" href="#the-problem-with-the-blocking-vm" title="Permanent link">⚓︎</a></h2>
+<p>The problem of blocking VM is that... it's blocking :)
+This is not a problem when Redis is used in batch processing activities, but for real-time usage one of the good points of Redis is the low latency. The blocking VM will have bad latency behaviors as when a client is accessing a swapped out value, or when Redis needs to swap out values, no other clients will be served in the meantime.</p>
+<p>Swapping out keys should happen in background. Similarly when a client is accessing a swapped out value other clients accessing in memory values should be served mostly as fast as when VM is disabled. Only the clients dealing with swapped out keys should be delayed.</p>
+<p>All this limitations called for a non-blocking VM implementation.</p>
+<h2 id="threaded-vm">Threaded VM<a class="headerlink" href="#threaded-vm" title="Permanent link">⚓︎</a></h2>
+<p>There are basically three main ways to turn the blocking VM into a non blocking one.
+* 1: One way is obvious, and in my opinion, not a good idea at all, that is, turning Redis itself into a threaded server: if every request is served by a different thread automatically other clients don't need to wait for blocked ones. Redis is fast, exports atomic operations, has no locks, and is just 10k lines of code, <em>because</em> it is single threaded, so this was not an option for me.
+* 2: Using non-blocking I/O against the swap file. After all you can think Redis already event-loop based, why don't just handle disk I/O in a non-blocking fashion? I also discarded this possibility because of two main reasons. One is that non blocking file operations, unlike sockets, are an incompatibility nightmare. It's not just like calling select, you need to use OS-specific things. The other problem is that the I/O is just one part of the time consumed to handle VM, another big part is the CPU used in order to encode/decode data to/from the swap file. This is I picked option three, that is...
+* 3: Using I/O threads, that is, a pool of threads handling the swap I/O operations. This is what the Redis VM is using, so let's detail how this works.</p>
+<h2 id="io-threads">I/O Threads<a class="headerlink" href="#io-threads" title="Permanent link">⚓︎</a></h2>
+<p>The threaded VM design goals where the following, in order of importance:</p>
+<ul>
+<li>Simple implementation, little room for race conditions, simple locking, VM system more or less completely decoupled from the rest of Redis code.</li>
+<li>Good performances, no locks for clients accessing values in memory.</li>
+<li>Ability to decode/encode objects in the I/O threads.</li>
+</ul>
+<p>The above goals resulted in an implementation where the Redis main thread (the one serving actual clients) and the I/O threads communicate using a queue of jobs, with a single mutex.
+Basically when main thread requires some work done in the background by some I/O thread, it pushes an I/O job structure in the <code>server.io_newjobs</code> queue (that is, just a linked list). If there are no active I/O threads, one is started. At this point some I/O thread will process the I/O job, and the result of the processing is pushed in the <code>server.io_processed</code> queue. The I/O thread will send a byte using an UNIX pipe to the main thread in order to signal that a new job was processed and the result is ready to be processed.</p>
+<p>This is how the <code>iojob</code> structure looks like:</p>
+<div class="highlight"><pre><span></span><code>typedef struct iojob {
+    int type;   /* Request type, REDIS_IOJOB_* */
+    redisDb *db;/* Redis database */
+    robj *key;  /* This I/O request is about swapping this key */
+    robj *val;  /* the value to swap for REDIS_IOREQ_*_SWAP, otherwise this
+                 * field is populated by the I/O thread for REDIS_IOREQ_LOAD. */
+    off_t page; /* Swap page where to read/write the object */
+    off_t pages; /* Swap pages needed to save object. PREPARE_SWAP return val */
+    int canceled; /* True if this command was canceled by blocking side of VM */
+    pthread_t thread; /* ID of the thread processing this entry */
+} iojob;
+</code></pre></div>
+<p>There are just three type of jobs that an I/O thread can perform (the type is specified by the <code>type</code> field of the structure):</p>
+<ul>
+<li><code>REDIS_IOJOB_LOAD</code>: load the value associated to a given key from swap to memory. The object offset inside the swap file is <code>page</code>, the object type is <code>key-&gt;vtype</code>. The result of this operation will populate the <code>val</code> field of the structure.</li>
+<li><code>REDIS_IOJOB_PREPARE_SWAP</code>: compute the number of pages needed in order to save the object pointed by <code>val</code> into the swap. The result of this operation will populate the <code>pages</code> field.</li>
+<li><code>REDIS_IOJOB_DO_SWAP</code>: Transfer the object pointed by <code>val</code> to the swap file, at page offset <code>page</code>.</li>
+</ul>
+<p>The main thread delegates just the above three tasks. All the rest is handled by the I/O thread itself, for instance finding a suitable range of free pages in the swap file page table (that is a fast operation), deciding what object to swap, altering the storage field of a Redis object to reflect the current state of a value.</p>
+<h2 id="non-blocking-vm-as-probabilistic-enhancement-of-blocking-vm">Non blocking VM as probabilistic enhancement of blocking VM<a class="headerlink" href="#non-blocking-vm-as-probabilistic-enhancement-of-blocking-vm" title="Permanent link">⚓︎</a></h2>
+<p>So now we have a way to request background jobs dealing with slow VM operations. How to add this to the mix of the rest of the work done by the main thread? While blocking VM was aware that an object was swapped out just when the object was looked up, this is too late for us: in C it is not trivial to start a background job in the middle of the command, leave the function, and re-enter in the same point the computation when the I/O thread finished what we requested (that is, no co-routines or continuations or alike).</p>
+<p>Fortunately there was a much, much simpler way to do this. And we love simple things: basically consider the VM implementation a blocking one, but add an optimization (using non the no blocking VM operations we are able to perform) to make the blocking <em>very</em> unlikely.</p>
+<p>This is what we do:</p>
+<ul>
+<li>Every time a client sends us a command, <em>before</em> the command is executed, we examine the argument vector of the command in search for swapped keys. After all we know for every command what arguments are keys, as the Redis command format is pretty simple.</li>
+<li>If we detect that at least a key in the requested command is swapped on disk, we block the client instead of really issuing the command. For every swapped value associated to a requested key, an I/O job is created, in order to bring the values back in memory. The main thread continues the execution of the event loop, without caring about the blocked client.</li>
+<li>In the meanwhile, I/O threads are loading values in memory. Every time an I/O thread finished loading a value, it sends a byte to the main thread using an UNIX pipe. The pipe file descriptor has a readable event associated in the main thread event loop, that is the function <code>vmThreadedIOCompletedJob</code>. If this function detects that all the values needed for a blocked client were loaded, the client is restarted and the original command called.</li>
+</ul>
+<p>So you can think of this as a blocked VM that almost always happen to have the right keys in memory, since we pause clients that are going to issue commands about swapped out values until this values are loaded.</p>
+<p>If the function checking what argument is a key fails in some way, there is no problem: the lookup function will see that a given key is associated to a swapped out value and will block loading it. So our non blocking VM reverts to a blocking one when it is not possible to anticipate what keys are touched.</p>
+<p>For instance in the case of the <code>SORT</code> command used together with the <code>GET</code> or <code>BY</code> options, it is not trivial to know beforehand what keys will be requested, so at least in the first implementation, <code>SORT BY/GET</code> resorts to the blocking VM implementation.</p>
+<h2 id="blocking-clients-on-swapped-keys">Blocking clients on swapped keys<a class="headerlink" href="#blocking-clients-on-swapped-keys" title="Permanent link">⚓︎</a></h2>
+<p>How to block clients? To suspend a client in an event-loop based server is pretty trivial. All we do is canceling its read handler. Sometimes we do something different (for instance for BLPOP) that is just marking the client as blocked, but not processing new data (just accumulating the new data into input buffers).</p>
+<h2 id="aborting-io-jobs">Aborting I/O jobs<a class="headerlink" href="#aborting-io-jobs" title="Permanent link">⚓︎</a></h2>
+<p>There is something hard to solve about the interactions between our blocking and non blocking VM, that is, what happens if a blocking operation starts about a key that is also "interested" by a non blocking operation at the same time?</p>
+<p>For instance while SORT BY is executed, a few keys are being loaded in a blocking manner by the sort command. At the same time, another client may request the same keys with a simple <em>GET key</em> command, that will trigger the creation of an I/O job to load the key in background.</p>
+<p>The only simple way to deal with this problem is to be able to kill I/O jobs in the main thread, so that if a key that we want to load or swap in a blocking way is in the <code>REDIS_VM_LOADING</code> or <code>REDIS_VM_SWAPPING</code> state (that is, there is an I/O job about this key), we can just kill the I/O job about this key, and go ahead with the blocking operation we want to perform.</p>
+<p>This is not as trivial as it is. In a given moment an I/O job can be in one of the following three queues:</p>
+<ul>
+<li>server.io_newjobs: the job was already queued but no thread is handling it.</li>
+<li>server.io_processing: the job is being processed by an I/O thread.</li>
+<li>server.io_processed: the job was already processed.
+The function able to kill an I/O job is <code>vmCancelThreadedIOJob</code>, and this is what it does:</li>
+<li>If the job is in the newjobs queue, that's simple, removing the iojob structure from the queue is enough as no thread is still executing any operation.</li>
+<li>If the job is in the processing queue, a thread is messing with our job (and possibly with the associated object!). The only thing we can do is waiting for the item to move to the next queue in a <em>blocking way</em>. Fortunately this condition happens very rarely so it's not a performance problem.</li>
+<li>If the job is in the processed queue, we just mark it as <em>canceled</em> marking setting the <code>canceled</code> field to 1 in the iojob structure. The function processing completed jobs will just ignored and free the job instead of really processing it.</li>
+</ul>
+<h2 id="questions">Questions?<a class="headerlink" href="#questions" title="Permanent link">⚓︎</a></h2>
+<p>This document is in no way complete, the only way to get the whole picture is reading the source code, but it should be a good introduction in order to make the code review / understanding a lot simpler.</p>
+<p>Something is not clear about this page? Please leave a comment and I'll try to address the issue possibly integrating the answer in this document.</p>
+
+  <hr>
+<div class="md-source-file">
+  <small>
+    
+      最后更新:
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 25, 2023</span>
+      
+        <br>
+        创建日期:
+        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 25, 2023</span>
+      
+    
+  </small>
+</div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../internals-sds/" class="md-footer__link md-footer__link--prev" aria-label="上一页: String internals">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                String internals
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../rdd/" class="md-footer__link md-footer__link--next" aria-label="下一页: Redis design draft #2 (historical)">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                Redis design draft #2 (historical)
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2023 Ean Yang
+    </div>
+  
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/YQisme" target="_blank" rel="noopener" title="github主页" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://space.bilibili.com/244185393?spm_id_from=333.788.0.0" target="_blank" rel="noopener" title="b站主页" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M488.6 104.1c16.7 18.1 24.4 39.7 23.3 65.7v202.4c-.4 26.4-9.2 48.1-26.5 65.1-17.2 17-39.1 25.9-65.5 26.7H92.02c-26.45-.8-48.21-9.8-65.28-27.2C9.682 419.4.767 396.5 0 368.2V169.8c.767-26 9.682-47.6 26.74-65.7C43.81 87.75 65.57 78.77 92.02 78h29.38L96.05 52.19c-5.75-5.73-8.63-13-8.63-21.79 0-8.8 2.88-16.06 8.63-21.797C101.8 2.868 109.1 0 117.9 0s16.1 2.868 21.9 8.603L213.1 78h88l74.5-69.397C381.7 2.868 389.2 0 398 0c8.8 0 16.1 2.868 21.9 8.603 5.7 5.737 8.6 12.997 8.6 21.797 0 8.79-2.9 16.06-8.6 21.79L394.6 78h29.3c26.4.77 48 9.75 64.7 26.1zm-38.8 69.7c-.4-9.6-3.7-17.4-10.7-23.5-5.2-6.1-14-9.4-22.7-9.8H96.05c-9.59.4-17.45 3.7-23.58 9.8-6.14 6.1-9.4 13.9-9.78 23.5v194.4c0 9.2 3.26 17 9.78 23.5s14.38 9.8 23.58 9.8H416.4c9.2 0 17-3.3 23.3-9.8 6.3-6.5 9.7-14.3 10.1-23.5V173.8zm-264.3 42.7c6.3 6.3 9.7 14.1 10.1 23.2V273c-.4 9.2-3.7 16.9-9.8 23.2-6.2 6.3-14 9.5-23.6 9.5-9.6 0-17.5-3.2-23.6-9.5-6.1-6.3-9.4-14-9.8-23.2v-33.3c.4-9.1 3.8-16.9 10.1-23.2 6.3-6.3 13.2-9.6 23.3-10 9.2.4 17 3.7 23.3 10zm191.5 0c6.3 6.3 9.7 14.1 10.1 23.2V273c-.4 9.2-3.7 16.9-9.8 23.2-6.1 6.3-14 9.5-23.6 9.5-9.6 0-17.4-3.2-23.6-9.5-7-6.3-9.4-14-9.7-23.2v-33.3c.3-9.1 3.7-16.9 10-23.2 6.3-6.3 14.1-9.6 23.3-10 9.2.4 17 3.7 23.3 10z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://eanyang7.com" target="_blank" rel="noopener" title="个人主页" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M112 48a48 48 0 1 1 96 0 48 48 0 1 1-96 0zm40 304v128c0 17.7-14.3 32-32 32s-32-14.3-32-32V256.9l-28.6 47.6c-9.1 15.1-28.8 20-43.9 10.9s-20-28.8-10.9-43.9l58.3-97c17.4-28.9 48.6-46.6 82.3-46.6h29.7c33.7 0 64.9 17.7 82.3 46.6l58.3 97c9.1 15.1 4.2 34.8-10.9 43.9s-34.8 4.2-43.9-10.9L232 256.9V480c0 17.7-14.3 32-32 32s-32-14.3-32-32V352h-16z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.tracking", "navigation.prune", "navigation.top", "toc.follow", "header.autohide", "navigation.footer", "search.suggest", "search.highlight", "search.share", "content.action.edit", "content.action.view", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.6c14ae12.min.js"></script>
+      
+    
+  </body>
+</html>

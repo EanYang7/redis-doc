@@ -1,0 +1,1815 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Building secondary indexes in Redis
+">
+      
+      
+        <meta name="author" content="Ean Yang">
+      
+      
+        <link rel="canonical" href="https://eanyang7.github.io/redis-doc/6-manual/patterns/indexes/">
+      
+      
+        <link rel="prev" href="../twitter-clone/">
+      
+      
+        <link rel="next" href="../../pipelining/">
+      
+      
+      <link rel="icon" href="../../../assets/favicon.jpg">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.12">
+    
+    
+      
+        <title>Secondary indexing - redis 文档</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.fad675c6.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.356b1318.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="red" data-md-color-accent="deep-purple">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#simple-numerical-indexes-with-sorted-sets" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="redis 文档" class="md-header__button md-logo" aria-label="redis 文档" data-md-component="logo">
+      
+  <img src="../../../assets/logo.jpg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            redis 文档
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Secondary indexing
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="red" data-md-color-accent="deep-purple"  aria-label="切换为暗黑模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换为暗黑模式" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5c-.84 0-1.65.15-2.39.42L12 2M3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29L3.34 7m.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14L3.36 17M20.65 7l-1.77 3.79a7.023 7.023 0 0 0-2.38-4.15l4.15.36m-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29L20.64 17M12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44L12 22Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="red"  aria-label="切换为浅色模式"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="切换为浅色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3 3.19.09m3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95 2.06.05m-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7 0-.24-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91 1.61 0 2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08Z"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/EanYang7/redis-doc" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M186.1 328.7c0 20.9-10.9 55.1-36.7 55.1s-36.7-34.2-36.7-55.1 10.9-55.1 36.7-55.1 36.7 34.2 36.7 55.1zM480 278.2c0 31.9-3.2 65.7-17.5 95-37.9 76.6-142.1 74.8-216.7 74.8-75.8 0-186.2 2.7-225.6-74.8-14.6-29-20.2-63.1-20.2-95 0-41.9 13.9-81.5 41.5-113.6-5.2-15.8-7.7-32.4-7.7-48.8 0-21.5 4.9-32.3 14.6-51.8 45.3 0 74.3 9 108.8 36 29-6.9 58.8-10 88.7-10 27 0 54.2 2.9 80.4 9.2 34-26.7 63-35.2 107.8-35.2 9.8 19.5 14.6 30.3 14.6 51.8 0 16.4-2.6 32.7-7.7 48.2 27.5 32.4 39 72.3 39 114.2zm-64.3 50.5c0-43.9-26.7-82.6-73.5-82.6-18.9 0-37 3.4-56 6-14.9 2.3-29.8 3.2-45.1 3.2-15.2 0-30.1-.9-45.1-3.2-18.7-2.6-37-6-56-6-46.8 0-73.5 38.7-73.5 82.6 0 87.8 80.4 101.3 150.4 101.3h48.2c70.3 0 150.6-13.4 150.6-101.3zm-82.6-55.1c-25.8 0-36.7 34.2-36.7 55.1s10.9 55.1 36.7 55.1 36.7-34.2 36.7-55.1-10.9-55.1-36.7-55.1z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    github仓库
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="redis 文档" class="md-nav__button md-logo" aria-label="redis 文档" data-md-component="logo">
+      
+  <img src="../../../assets/logo.jpg" alt="logo">
+
+    </a>
+    redis 文档
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/EanYang7/redis-doc" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M186.1 328.7c0 20.9-10.9 55.1-36.7 55.1s-36.7-34.2-36.7-55.1 10.9-55.1 36.7-55.1 36.7 34.2 36.7 55.1zM480 278.2c0 31.9-3.2 65.7-17.5 95-37.9 76.6-142.1 74.8-216.7 74.8-75.8 0-186.2 2.7-225.6-74.8-14.6-29-20.2-63.1-20.2-95 0-41.9 13.9-81.5 41.5-113.6-5.2-15.8-7.7-32.4-7.7-48.8 0-21.5 4.9-32.3 14.6-51.8 45.3 0 74.3 9 108.8 36 29-6.9 58.8-10 88.7-10 27 0 54.2 2.9 80.4 9.2 34-26.7 63-35.2 107.8-35.2 9.8 19.5 14.6 30.3 14.6 51.8 0 16.4-2.6 32.7-7.7 48.2 27.5 32.4 39 72.3 39 114.2zm-64.3 50.5c0-43.9-26.7-82.6-73.5-82.6-18.9 0-37 3.4-56 6-14.9 2.3-29.8 3.2-45.1 3.2-15.2 0-30.1-.9-45.1-3.2-18.7-2.6-37-6-56-6-46.8 0-73.5 38.7-73.5 82.6 0 87.8 80.4 101.3 150.4 101.3h48.2c70.3 0 150.6-13.4 150.6-101.3zm-82.6-55.1c-25.8 0-36.7 34.2-36.7 55.1s10.9 55.1 36.7 55.1 36.7-34.2 36.7-55.1-10.9-55.1-36.7-55.1z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    github仓库
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Documentation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../0-about/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    0 about
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../1-get-started/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    1 get started
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../2-install/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    2 install
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../3-connect/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    3 connect
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../4-data-types/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    4 data types
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../5-interact/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    5 interact
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    6 manual
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            6 manual
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../_index/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Use Redis
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../client-side-caching/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Client-side caching in Redis
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../keyspace-notifications/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis keyspace notifications
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../keyspace/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Keyspace
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_8_5" id="__nav_8_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Patterns
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_8_5">
+            <span class="md-nav__icon md-icon"></span>
+            Patterns
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../_index/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis programming patterns
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bulk-loading/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bulk loading
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../distributed-locks/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Distributed Locks with Redis
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../twitter-clone/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis patterns example
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_5_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_8_5_5" id="__nav_8_5_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Indexes
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_8_5_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_8_5_5">
+            <span class="md-nav__icon md-icon"></span>
+            Indexes
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Secondary indexing
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Secondary indexing
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#using-objects-ids-as-associated-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using objects IDs as associated values
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#updating-simple-sorted-set-indexes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Updating simple sorted set indexes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#turning-multi-dimensional-data-into-linear-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Turning multi dimensional data into linear data
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limits-of-the-score" class="md-nav__link">
+    <span class="md-ellipsis">
+      Limits of the score
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../pipelining/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    Pipelining
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../7-management/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    7 management
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../8-reference/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    8 reference
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#using-objects-ids-as-associated-values" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using objects IDs as associated values
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#updating-simple-sorted-set-indexes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Updating simple sorted set indexes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#turning-multi-dimensional-data-into-linear-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Turning multi dimensional data into linear data
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#limits-of-the-score" class="md-nav__link">
+    <span class="md-ellipsis">
+      Limits of the score
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+    <a href="https://github.com/EanYang7/redis-doc/tree/main/docs/6-manual/patterns/indexes/index.md" title="编辑此页" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/EanYang7/redis-doc/tree/main/docs/6-manual/patterns/indexes/index.md" title="查看本页的源代码" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0 8a5 5 0 0 1-5-5 5 5 0 0 1 5-5 5 5 0 0 1 5 5 5 5 0 0 1-5 5m0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5Z"/></svg>
+    </a>
+  
+
+
+<p>Redis is not exactly a key-value store, since values can be complex data structures. However it has an external key-value shell: at API level data is addressed by the key name. It is fair to say that, natively, Redis only offers <em>primary key access</em>. However since Redis is a data structures server, its capabilities can be used for indexing, in order to create secondary indexes of different kinds, including composite (multi-column) indexes.</p>
+<p>This document explains how it is possible to create indexes in Redis using the following data structures:</p>
+<ul>
+<li>Sorted sets to create secondary indexes by ID or other numerical fields.</li>
+<li>Sorted sets with lexicographical ranges for creating more advanced secondary indexes, composite indexes and graph traversal indexes.</li>
+<li>Sets for creating random indexes.</li>
+<li>Lists for creating simple iterable indexes and last N items indexes.</li>
+</ul>
+<p>Implementing and maintaining indexes with Redis is an advanced topic, so most
+users that need to perform complex queries on data should understand if they
+are better served by a relational store. However often, especially in caching
+scenarios, there is the explicit need to store indexed data into Redis in order to speedup common queries which require some form of indexing in order to be executed.</p>
+<h1 id="simple-numerical-indexes-with-sorted-sets">Simple numerical indexes with sorted sets<a class="headerlink" href="#simple-numerical-indexes-with-sorted-sets" title="Permanent link">⚓︎</a></h1>
+<p>The simplest secondary index you can create with Redis is by using the
+sorted set data type, which is a data structure representing a set of
+elements ordered by a floating point number which is the <em>score</em> of
+each element. Elements are ordered from the smallest to the highest score.</p>
+<p>Since the score is a double precision float, indexes you can build with
+vanilla sorted sets are limited to things where the indexing field is a number
+within a given range.</p>
+<p>The two commands to build these kind of indexes are <code>ZADD</code> and
+<code>ZRANGE</code> with the <code>BYSCORE</code> argument to respectively add items and retrieve items within a
+specified range.</p>
+<p>For instance, it is possible to index a set of person names by their
+age by adding element to a sorted set. The element will be the name of the
+person and the score will be the age.</p>
+<div class="highlight"><pre><span></span><code>ZADD myindex 25 Manuel
+ZADD myindex 18 Anna
+ZADD myindex 35 Jon
+ZADD myindex 67 Helen
+</code></pre></div>
+<p>In order to retrieve all persons with an age between 20 and 40, the following
+command can be used:</p>
+<div class="highlight"><pre><span></span><code>ZRANGE myindex 20 40 BYSCORE
+1) &quot;Manuel&quot;
+2) &quot;Jon&quot;
+</code></pre></div>
+<p>By using the <strong>WITHSCORES</strong> option of <code>ZRANGE</code> it is also possible
+to obtain the scores associated with the returned elements.</p>
+<p>The <code>ZCOUNT</code> command can be used in order to retrieve the number of elements
+within a given range, without actually fetching the elements, which is also
+useful, especially given the fact the operation is executed in logarithmic
+time regardless of the size of the range.</p>
+<p>Ranges can be inclusive or exclusive, please refer to the <code>ZRANGE</code>
+command documentation for more information.</p>
+<p><strong>Note</strong>: Using the <code>ZRANGE</code> with the <code>BYSCORE</code> and <code>REV</code> arguments, it is possible to query a range in
+reversed order, which is often useful when data is indexed in a given
+direction (ascending or descending) but we want to retrieve information
+the other way around.</p>
+<h2 id="using-objects-ids-as-associated-values">Using objects IDs as associated values<a class="headerlink" href="#using-objects-ids-as-associated-values" title="Permanent link">⚓︎</a></h2>
+<p>In the above example we associated names to ages. However in general we
+may want to index some field of an object which is stored elsewhere.
+Instead of using the sorted set value directly to store the data associated
+with the indexed field, it is possible to store just the ID of the object.</p>
+<p>For example I may have Redis hashes representing users. Each user is
+represented by a single key, directly accessible by ID:</p>
+<div class="highlight"><pre><span></span><code>HMSET user:1 id 1 username antirez ctime 1444809424 age 38
+HMSET user:2 id 2 username maria ctime 1444808132 age 42
+HMSET user:3 id 3 username jballard ctime 1443246218 age 33
+</code></pre></div>
+<p>If I want to create an index in order to query users by their age, I
+could do:</p>
+<div class="highlight"><pre><span></span><code>ZADD user.age.index 38 1
+ZADD user.age.index 42 2
+ZADD user.age.index 33 3
+</code></pre></div>
+<p>This time the value associated with the score in the sorted set is the
+ID of the object. So once I query the index with <code>ZRANGE</code> with the <code>BYSCORE</code> argument, I'll
+also have to retrieve the information I need with <code>HGETALL</code> or similar
+commands. The obvious advantage is that objects can change without touching
+the index, as long as we don't change the indexed field.</p>
+<p>In the next examples we'll almost always use IDs as values associated with
+the index, since this is usually the more sounding design, with a few
+exceptions.</p>
+<h2 id="updating-simple-sorted-set-indexes">Updating simple sorted set indexes<a class="headerlink" href="#updating-simple-sorted-set-indexes" title="Permanent link">⚓︎</a></h2>
+<p>Often we index things which change over time. In the above
+example, the age of the user changes every year. In such a case it would
+make sense to use the birth date as index instead of the age itself,
+but there are other cases where we simply want some field to change from
+time to time, and the index to reflect this change.</p>
+<p>The <code>ZADD</code> command makes updating simple indexes a very trivial operation
+since re-adding back an element with a different score and the same value
+will simply update the score and move the element at the right position,
+so if the user <code>antirez</code> turned 39 years old, in order to update the
+data in the hash representing the user, and in the index as well, we need
+to execute the following two commands:</p>
+<div class="highlight"><pre><span></span><code>HSET user:1 age 39
+ZADD user.age.index 39 1
+</code></pre></div>
+<p>The operation may be wrapped in a <code>MULTI</code>/<code>EXEC</code> transaction in order to
+make sure both fields are updated or none.</p>
+<h2 id="turning-multi-dimensional-data-into-linear-data">Turning multi dimensional data into linear data<a class="headerlink" href="#turning-multi-dimensional-data-into-linear-data" title="Permanent link">⚓︎</a></h2>
+<p>Indexes created with sorted sets are able to index only a single numerical
+value. Because of this you may think it is impossible to index something
+which has multiple dimensions using this kind of indexes, but actually this
+is not always true. If you can efficiently represent something
+multi-dimensional in a linear way, they it is often possible to use a simple
+sorted set for indexing.</p>
+<p>For example the <a href="/commands/geoadd">Redis geo indexing API</a> uses a sorted
+set to index places by latitude and longitude using a technique called
+<a href="https://en.wikipedia.org/wiki/Geohash">Geo hash</a>. The sorted set score
+represents alternating bits of longitude and latitude, so that we map the
+linear score of a sorted set to many small <em>squares</em> in the earth surface.
+By doing an 8+1 style center plus neighborhoods search it is possible to
+retrieve elements by radius.</p>
+<h2 id="limits-of-the-score">Limits of the score<a class="headerlink" href="#limits-of-the-score" title="Permanent link">⚓︎</a></h2>
+<p>Sorted set elements scores are double precision floats. It means that
+they can represent different decimal or integer values with different
+errors, because they use an exponential representation internally.
+However what is interesting for indexing purposes is that the score is
+always able to represent without any error numbers between -9007199254740992
+and 9007199254740992, which is <code>-/+ 2^53</code>.</p>
+<p>When representing much larger numbers, you need a different form of indexing
+that is able to index numbers at any precision, called a lexicographical
+index.</p>
+<h1 id="lexicographical-indexes">Lexicographical indexes<a class="headerlink" href="#lexicographical-indexes" title="Permanent link">⚓︎</a></h1>
+<p>Redis sorted sets have an interesting property. When elements are added
+with the same score, they are sorted lexicographically, comparing the
+strings as binary data with the <code>memcmp()</code> function.</p>
+<p>For people that don't know the C language nor the <code>memcmp</code> function, what
+it means is that elements with the same score are sorted comparing the
+raw values of their bytes, byte after byte. If the first byte is the same,
+the second is checked and so forth. If the common prefix of two strings is
+the same then the longer string is considered the greater of the two,
+so "foobar" is greater than "foo".</p>
+<p>There are commands such as <code>ZRANGE</code> and <code>ZLEXCOUNT</code> that
+are able to query and count ranges in a lexicographically fashion, assuming
+they are used with sorted sets where all the elements have the same score.</p>
+<p>This Redis feature is basically equivalent to a <code>b-tree</code> data structure which
+is often used in order to implement indexes with traditional databases.
+As you can guess, because of this, it is possible to use this Redis data
+structure in order to implement pretty fancy indexes.</p>
+<p>Before we dive into using lexicographical indexes, let's check how
+sorted sets behave in this special mode of operation. Since we need to
+add elements with the same score, we'll always use the special score of
+zero.</p>
+<div class="highlight"><pre><span></span><code>ZADD myindex 0 baaa
+ZADD myindex 0 abbb
+ZADD myindex 0 aaaa
+ZADD myindex 0 bbbb
+</code></pre></div>
+<p>Fetching all the elements from the sorted set immediately reveals that they
+are ordered lexicographically.</p>
+<div class="highlight"><pre><span></span><code>ZRANGE myindex 0 -1
+1) &quot;aaaa&quot;
+2) &quot;abbb&quot;
+3) &quot;baaa&quot;
+4) &quot;bbbb&quot;
+</code></pre></div>
+<p>Now we can use <code>ZRANGE</code> with the <code>BYLEX</code> argument in order to perform range queries.</p>
+<div class="highlight"><pre><span></span><code>ZRANGE myindex [a (b BYLEX
+1) &quot;aaaa&quot;
+2) &quot;abbb&quot;
+</code></pre></div>
+<p>Note that in the range queries we prefixed the <code>min</code> and <code>max</code> elements
+identifying the range with the special characters <code>[</code> and <code>(</code>.
+This prefixes are mandatory, and they specify if the elements
+of the range are inclusive or exclusive. So the range <code>[a (b</code> means give me
+all the elements lexicographically between <code>a</code> inclusive and <code>b</code> exclusive,
+which are all the elements starting with <code>a</code>.</p>
+<p>There are also two more special characters indicating the infinitely negative
+string and the infinitely positive string, which are <code>-</code> and <code>+</code>.</p>
+<div class="highlight"><pre><span></span><code>ZRANGE myindex [b + BYLEX
+1) &quot;baaa&quot;
+2) &quot;bbbb&quot;
+</code></pre></div>
+<p>That's it basically. Let's see how to use these features to build indexes.</p>
+<h2 id="a-first-example-completion">A first example: completion<a class="headerlink" href="#a-first-example-completion" title="Permanent link">⚓︎</a></h2>
+<p>An interesting application of indexing is completion. Completion is what
+happens when you start typing your query into a search engine: the user
+interface will anticipate what you are likely typing, providing common
+queries that start with the same characters.</p>
+<p>A naive approach to completion is to just add every single query we
+get from the user into the index. For example if the user searches <code>banana</code>
+we'll just do:</p>
+<div class="highlight"><pre><span></span><code>ZADD myindex 0 banana
+</code></pre></div>
+<p>And so forth for each search query ever encountered. Then when we want to
+complete the user input, we execute a range query using <code>ZRANGE</code> with the <code>BYLEX</code> argument.
+Imagine the user is typing "bit" inside the search form, and we want to
+offer possible search keywords starting for "bit". We send Redis a command
+like that:</p>
+<div class="highlight"><pre><span></span><code>ZRANGE myindex &quot;[bit&quot; &quot;[bit\xff&quot; BYLEX
+</code></pre></div>
+<p>Basically we create a range using the string the user is typing right now
+as start, and the same string plus a trailing byte set to 255, which is <code>\xff</code> in the example, as the end of the range. This way we get all the strings that start for the string the user is typing.</p>
+<p>Note that we don't want too many items returned, so we may use the <strong>LIMIT</strong> option in order to reduce the number of results.</p>
+<h2 id="adding-frequency-into-the-mix">Adding frequency into the mix<a class="headerlink" href="#adding-frequency-into-the-mix" title="Permanent link">⚓︎</a></h2>
+<p>The above approach is a bit naive, because all the user searches are the same
+in this way. In a real system we want to complete strings according to their
+frequency: very popular searches will be proposed with a higher probability
+compared to search strings typed very rarely.</p>
+<p>In order to implement something which depends on the frequency, and at the
+same time automatically adapts to future inputs, by purging searches that
+are no longer popular, we can use a very simple <em>streaming algorithm</em>.</p>
+<p>To start, we modify our index in order to store not just the search term,
+but also the frequency the term is associated with. So instead of just adding
+<code>banana</code> we add <code>banana:1</code>, where 1 is the frequency.</p>
+<div class="highlight"><pre><span></span><code>ZADD myindex 0 banana:1
+</code></pre></div>
+<p>We also need logic in order to increment the index if the search term
+already exists in the index, so what we'll actually do is something like
+that:</p>
+<div class="highlight"><pre><span></span><code>ZRANGE myindex &quot;[banana:&quot; + BYLEX LIMIT 0 1
+1) &quot;banana:1&quot;
+</code></pre></div>
+<p>This will return the single entry of <code>banana</code> if it exists. Then we
+can increment the associated frequency and send the following two
+commands:</p>
+<div class="highlight"><pre><span></span><code>ZREM myindex 0 banana:1
+ZADD myindex 0 banana:2
+</code></pre></div>
+<p>Note that because it is possible that there are concurrent updates, the
+above three commands should be send via a <a href="/commands/eval">Lua script</a>
+instead, so that the Lua script will atomically get the old count and
+re-add the item with incremented score.</p>
+<p>So the result will be that, every time a user searches for <code>banana</code> we'll
+get our entry updated.</p>
+<p>There is more: our goal is to just have items searched very frequently.
+So we need some form of purging. When we actually query the index
+in order to complete the user input, we may see something like that:</p>
+<div class="highlight"><pre><span></span><code>ZRANGE myindex &quot;[banana:&quot; + BYLEX LIMIT 0 10
+1) &quot;banana:123&quot;
+2) &quot;banaooo:1&quot;
+3) &quot;banned user:49&quot;
+4) &quot;banning:89&quot;
+</code></pre></div>
+<p>Apparently nobody searches for "banaooo", for example, but the query was
+performed a single time, so we end presenting it to the user.</p>
+<p>This is what we can do. Out of the returned items, we pick a random one,
+decrement its score by one, and re-add it with the new score.
+However if the score reaches 0, we simply remove the item from the list.
+You can use much more advanced systems, but the idea is that the index in
+the long run will contain top searches, and if top searches will change over
+the time it will adapt automatically.</p>
+<p>A refinement to this algorithm is to pick entries in the list according to
+their weight: the higher the score, the less likely entries are picked
+in order to decrement its score, or evict them.</p>
+<h2 id="normalizing-strings-for-case-and-accents">Normalizing strings for case and accents<a class="headerlink" href="#normalizing-strings-for-case-and-accents" title="Permanent link">⚓︎</a></h2>
+<p>In the completion examples we always used lowercase strings. However
+reality is much more complex than that: languages have capitalized names,
+accents, and so forth.</p>
+<p>One simple way do deal with this issues is to actually normalize the
+string the user searches. Whatever the user searches for "Banana",
+"BANANA" or "Ba'nana" we may always turn it into "banana".</p>
+<p>However sometimes we may like to present the user with the original
+item typed, even if we normalize the string for indexing. In order to
+do this, what we do is to change the format of the index so that instead
+of just storing <code>term:frequency</code> we store <code>normalized:frequency:original</code>
+like in the following example:</p>
+<div class="highlight"><pre><span></span><code>ZADD myindex 0 banana:273:Banana
+</code></pre></div>
+<p>Basically we add another field that we'll extract and use only for
+visualization. Ranges will always be computed using the normalized strings
+instead. This is a common trick which has multiple applications.</p>
+<h2 id="adding-auxiliary-information-in-the-index">Adding auxiliary information in the index<a class="headerlink" href="#adding-auxiliary-information-in-the-index" title="Permanent link">⚓︎</a></h2>
+<p>When using a sorted set in a direct way, we have two different attributes
+for each object: the score, which we use as an index, and an associated
+value. When using lexicographical indexes instead, the score is always
+set to 0 and basically not used at all. We are left with a single string,
+which is the element itself.</p>
+<p>Like we did in the previous completion examples, we are still able to
+store associated data using separators. For example we used the colon in
+order to add the frequency and the original word for completion.</p>
+<p>In general we can add any kind of associated value to our indexing key.
+In order to use a lexicographical index to implement a simple key-value store
+we just store the entry as <code>key:value</code>:</p>
+<div class="highlight"><pre><span></span><code>ZADD myindex 0 mykey:myvalue
+</code></pre></div>
+<p>And search for the key with:</p>
+<div class="highlight"><pre><span></span><code>ZRANGE myindex [mykey: + BYLEX LIMIT 0 1
+1) &quot;mykey:myvalue&quot;
+</code></pre></div>
+<p>Then we extract the part after the colon to retrieve the value.
+However a problem to solve in this case is collisions. The colon character
+may be part of the key itself, so it must be chosen in order to never
+collide with the key we add.</p>
+<p>Since lexicographical ranges in Redis are binary safe you can use any
+byte or any sequence of bytes. However if you receive untrusted user
+input, it is better to use some form of escaping in order to guarantee
+that the separator will never happen to be part of the key.</p>
+<p>For example if you use two null bytes as separator <code>"\0\0"</code>, you may
+want to always escape null bytes into two bytes sequences in your strings.</p>
+<h2 id="numerical-padding">Numerical padding<a class="headerlink" href="#numerical-padding" title="Permanent link">⚓︎</a></h2>
+<p>Lexicographical indexes may look like good only when the problem at hand
+is to index strings. Actually it is very simple to use this kind of index
+in order to perform indexing of arbitrary precision numbers.</p>
+<p>In the ASCII character set, digits appear in the order from 0 to 9, so
+if we left-pad numbers with leading zeroes, the result is that comparing
+them as strings will order them by their numerical value.</p>
+<div class="highlight"><pre><span></span><code>ZADD myindex 0 00324823481:foo
+ZADD myindex 0 12838349234:bar
+ZADD myindex 0 00000000111:zap
+
+ZRANGE myindex 0 -1
+1) &quot;00000000111:zap&quot;
+2) &quot;00324823481:foo&quot;
+3) &quot;12838349234:bar&quot;
+</code></pre></div>
+<p>We effectively created an index using a numerical field which can be as
+big as we want. This also works with floating point numbers of any precision
+by making sure we left pad the numerical part with leading zeroes and the
+decimal part with trailing zeroes like in the following list of numbers:</p>
+<div class="highlight"><pre><span></span><code>    01000000000000.11000000000000
+    01000000000000.02200000000000
+    00000002121241.34893482930000
+    00999999999999.00000000000000
+</code></pre></div>
+<h2 id="using-numbers-in-binary-form">Using numbers in binary form<a class="headerlink" href="#using-numbers-in-binary-form" title="Permanent link">⚓︎</a></h2>
+<p>Storing numbers in decimal may use too much memory. An alternative approach
+is just to store numbers, for example 128 bit integers, directly in their
+binary form. However for this to work, you need to store the numbers in
+<em>big endian format</em>, so that the most significant bytes are stored before
+the least significant bytes. This way when Redis compares the strings with
+<code>memcmp()</code>, it will effectively sort the numbers by their value.</p>
+<p>Keep in mind that data stored in binary format is less observable for
+debugging, harder to parse and export. So it is definitely a trade off.</p>
+<h1 id="composite-indexes">Composite indexes<a class="headerlink" href="#composite-indexes" title="Permanent link">⚓︎</a></h1>
+<p>So far we explored ways to index single fields. However we all know that
+SQL stores are able to create indexes using multiple fields. For example
+I may index products in a very large store by room number and price.</p>
+<p>I need to run queries in order to retrieve all the products in a given
+room having a given price range. What I can do is to index each product
+in the following way:</p>
+<div class="highlight"><pre><span></span><code>ZADD myindex 0 0056:0028.44:90
+ZADD myindex 0 0034:0011.00:832
+</code></pre></div>
+<p>Here the fields are <code>room:price:product_id</code>. I used just four digits padding
+in the example for simplicity. The auxiliary data (the product ID) does not
+need any padding.</p>
+<p>With an index like that, to get all the products in room 56 having a price
+between 10 and 30 dollars is very easy. We can just run the following
+command:</p>
+<div class="highlight"><pre><span></span><code>ZRANGE myindex [0056:0010.00 [0056:0030.00 BYLEX
+</code></pre></div>
+<p>The above is called a composed index. Its effectiveness depends on the
+order of the fields and the queries I want to run. For example the above
+index cannot be used efficiently in order to get all the products having
+a specific price range regardless of the room number. However I can use
+the primary key in order to run queries regardless of the price, like
+<em>give me all the products in room 44</em>.</p>
+<p>Composite indexes are very powerful, and are used in traditional stores
+in order to optimize complex queries. In Redis they could be useful both
+to implement a very fast in-memory Redis index of something stored into
+a traditional data store, or in order to directly index Redis data.</p>
+<h1 id="updating-lexicographical-indexes">Updating lexicographical indexes<a class="headerlink" href="#updating-lexicographical-indexes" title="Permanent link">⚓︎</a></h1>
+<p>The value of the index in a lexicographical index can get pretty fancy
+and hard or slow to rebuild from what we store about the object. So one
+approach to simplify the handling of the index, at the cost of using more
+memory, is to also take alongside to the sorted set representing the index
+a hash mapping the object ID to the current index value.</p>
+<p>So for example, when we index we also add to a hash:</p>
+<div class="highlight"><pre><span></span><code>MULTI
+ZADD myindex 0 0056:0028.44:90
+HSET index.content 90 0056:0028.44:90
+EXEC
+</code></pre></div>
+<p>This is not always needed, but simplifies the operations of updating
+the index. In order to remove the old information we indexed for the object
+ID 90, regardless of the <em>current</em> fields values of the object, we just
+have to retrieve the hash value by object ID and <code>ZREM</code> it in the sorted
+set view.</p>
+<h1 id="representing-and-querying-graphs-using-a-hexastore">Representing and querying graphs using a hexastore<a class="headerlink" href="#representing-and-querying-graphs-using-a-hexastore" title="Permanent link">⚓︎</a></h1>
+<p>One cool thing about composite indexes is that they are handy in order
+to represent graphs, using a data structure which is called
+<a href="http://www.vldb.org/pvldb/vol1/1453965.pdf">Hexastore</a>.</p>
+<p>The hexastore provides a representation for relations between objects,
+formed by a <em>subject</em>, a <em>predicate</em> and an <em>object</em>.
+A simple relation between objects could be:</p>
+<div class="highlight"><pre><span></span><code>antirez is-friend-of matteocollina
+</code></pre></div>
+<p>In order to represent this relation I can store the following element
+in my lexicographical index:</p>
+<div class="highlight"><pre><span></span><code>ZADD myindex 0 spo:antirez:is-friend-of:matteocollina
+</code></pre></div>
+<p>Note that I prefixed my item with the string <strong>spo</strong>. It means that
+the item represents a subject,predicate,object relation.</p>
+<p>In can add 5 more entries for the same relation, but in a different order:</p>
+<div class="highlight"><pre><span></span><code>ZADD myindex 0 sop:antirez:matteocollina:is-friend-of
+ZADD myindex 0 ops:matteocollina:is-friend-of:antirez
+ZADD myindex 0 osp:matteocollina:antirez:is-friend-of
+ZADD myindex 0 pso:is-friend-of:antirez:matteocollina
+ZADD myindex 0 pos:is-friend-of:matteocollina:antirez
+</code></pre></div>
+<p>Now things start to be interesting, and I can query the graph in many
+different ways. For example, who are all the people <code>antirez</code>
+<em>is friend of</em>?</p>
+<div class="highlight"><pre><span></span><code>ZRANGE myindex &quot;[spo:antirez:is-friend-of:&quot; &quot;[spo:antirez:is-friend-of:\xff&quot; BYLEX
+1) &quot;spo:antirez:is-friend-of:matteocollina&quot;
+2) &quot;spo:antirez:is-friend-of:wonderwoman&quot;
+3) &quot;spo:antirez:is-friend-of:spiderman&quot;
+</code></pre></div>
+<p>Or, what are all the relationships <code>antirez</code> and <code>matteocollina</code> have where
+the first is the subject and the second is the object?</p>
+<div class="highlight"><pre><span></span><code>ZRANGE myindex &quot;[sop:antirez:matteocollina:&quot; &quot;[sop:antirez:matteocollina:\xff&quot; BYLEX
+1) &quot;sop:antirez:matteocollina:is-friend-of&quot;
+2) &quot;sop:antirez:matteocollina:was-at-conference-with&quot;
+3) &quot;sop:antirez:matteocollina:talked-with&quot;
+</code></pre></div>
+<p>By combining different queries, I can ask fancy questions. For example:
+<em>Who are all my friends that, like beer, live in Barcelona, and matteocollina consider friends as well?</em>
+To get this information I start with an <code>spo</code> query to find all the people
+I'm friend with. Then for each result I get I perform an <code>spo</code> query
+to check if they like beer, removing the ones for which I can't find
+this relation. I do it again to filter by city. Finally I perform an <code>ops</code>
+query to find, of the list I obtained, who is considered friend by
+matteocollina.</p>
+<p>Make sure to check <a href="http://nodejsconfit.levelgraph.io/">Matteo Collina's slides about Levelgraph</a> in order to better understand these ideas.</p>
+<h1 id="multi-dimensional-indexes">Multi dimensional indexes<a class="headerlink" href="#multi-dimensional-indexes" title="Permanent link">⚓︎</a></h1>
+<p>A more complex type of index is an index that allows you to perform queries
+where two or more variables are queried at the same time for specific
+ranges. For example I may have a data set representing persons age and
+salary, and I want to retrieve all the people between 50 and 55 years old
+having a salary between 70000 and 85000.</p>
+<p>This query may be performed with a multi column index, but this requires
+us to select the first variable and then scan the second, which means we
+may do a lot more work than needed. It is possible to perform these kinds of
+queries involving multiple variables using different data structures.
+For example, multi-dimensional trees such as <em>k-d trees</em> or <em>r-trees</em> are
+sometimes used. Here we'll describe a different way to index data into
+multiple dimensions, using a representation trick that allows us to perform
+the query in a very efficient way using Redis lexicographical ranges.</p>
+<p>Let's say we have points in the space, which represent our data samples, where <code>x</code> and <code>y</code> are our coordinates. The max value of both variables is 400.</p>
+<p>In the next figure, the blue box represents our query. We want all the points where <code>x</code> is between 50 and 100, and where <code>y</code> is between 100 and 300.</p>
+<p><img alt="Points in the space" src="2idx_0.png" /></p>
+<p>In order to represent data that makes these kinds of queries fast to perform,
+we start by padding our numbers with 0. So for example imagine we want to
+add the point 10,25 (x,y) to our index. Given that the maximum range in the
+example is 400 we can just pad to three digits, so we obtain:</p>
+<div class="highlight"><pre><span></span><code>x = 010
+y = 025
+</code></pre></div>
+<p>Now what we do is to interleave the digits, taking the leftmost digit
+in x, and the leftmost digit in y, and so forth, in order to create a single
+number:</p>
+<div class="highlight"><pre><span></span><code>001205
+</code></pre></div>
+<p>This is our index, however in order to more easily reconstruct the original
+representation, if we want (at the cost of space), we may also add the
+original values as additional columns:</p>
+<div class="highlight"><pre><span></span><code>001205:10:25
+</code></pre></div>
+<p>Now, let's reason about this representation and why it is useful in the
+context of range queries. For example let's take the center of our blue
+box, which is at <code>x=75</code> and <code>y=200</code>. We can encode this number as we did
+earlier by interleaving the digits, obtaining:</p>
+<div class="highlight"><pre><span></span><code>027050
+</code></pre></div>
+<p>What happens if we substitute the last two digits respectively with 00 and 99?
+We obtain a range which is lexicographically continuous:</p>
+<div class="highlight"><pre><span></span><code>027000 to 027099
+</code></pre></div>
+<p>What this maps to is to a square representing all values where the <code>x</code>
+variable is between 70 and 79, and the <code>y</code> variable is between 200 and 209.
+To identify this specific area, we can write random points in that interval.</p>
+<p><img alt="Small area" src="2idx_1.png" /></p>
+<p>So the above lexicographic query allows us to easily query for points in
+a specific square in the picture. However the square may be too small for
+the box we are searching, so that too many queries are needed.
+So we can do the same but instead of replacing the last two digits with 00
+and 99, we can do it for the last four digits, obtaining the following
+range:</p>
+<div class="highlight"><pre><span></span><code>020000 029999
+</code></pre></div>
+<p>This time the range represents all the points where <code>x</code> is between 0 and 99
+and <code>y</code> is between 200 and 299. Drawing random points in this interval
+shows us this larger area.</p>
+<p><img alt="Large area" src="2idx_2.png" /></p>
+<p>So now our area is too big for our query, and still our search box is
+not completely included. We need more granularity, but we can easily obtain
+it by representing our numbers in binary form. This time, when we replace
+digits instead of getting squares which are ten times bigger, we get squares
+which are just two times bigger.</p>
+<p>Our numbers in binary form, assuming we need just 9 bits for each variable
+(in order to represent numbers up to 400 in value) would be:</p>
+<div class="highlight"><pre><span></span><code>x = 75  -&gt; 001001011
+y = 200 -&gt; 011001000
+</code></pre></div>
+<p>So by interleaving digits, our representation in the index would be:</p>
+<div class="highlight"><pre><span></span><code>000111000011001010:75:200
+</code></pre></div>
+<p>Let's see what are our ranges as we substitute the last 2, 4, 6, 8, ...
+bits with 0s ad 1s in the interleaved representation:</p>
+<div class="highlight"><pre><span></span><code>2 bits: x between 74 and 75, y between 200 and 201 (range=2)
+4 bits: x between 72 and 75, y between 200 and 203 (range=4)
+6 bits: x between 72 and 79, y between 200 and 207 (range=8)
+8 bits: x between 64 and 79, y between 192 and 207 (range=16)
+</code></pre></div>
+<p>And so forth. Now we have definitely better granularity!
+As you can see substituting N bits from the index gives us
+search boxes of side <code>2^(N/2)</code>.</p>
+<p>So what we do is check the dimension where our search box is smaller,
+and check the nearest power of two to this number. Our search box
+was 50,100 to 100,300, so it has a width of 50 and a height of 200.
+We take the smaller of the two, 50, and check the nearest power of two
+which is 64. 64 is 2^6, so we would work with indexes obtained replacing
+the latest 12 bits from the interleaved representation (so that we end
+replacing just 6 bits of each variable).</p>
+<p>However single squares may not cover all our search, so we may need more.
+What we do is to start with the left bottom corner of our search box,
+which is 50,100, and find the first range by substituting the last 6 bits
+in each number with 0. Then we do the same with the right top corner.</p>
+<p>With two trivial nested for loops where we increment only the significant
+bits, we can find all the squares between these two. For each square we
+convert the two numbers into our interleaved representation, and create
+the range using the converted representation as our start, and the same
+representation but with the latest 12 bits turned on as end range.</p>
+<p>For each square found we perform our query and get the elements inside,
+removing the elements which are outside our search box.</p>
+<p>Turning this into code is simple. Here is a Ruby example:</p>
+<div class="highlight"><pre><span></span><code>def spacequery(x0,y0,x1,y1,exp)
+    bits=exp*2
+    x_start = x0/(2**exp)
+    x_end = x1/(2**exp)
+    y_start = y0/(2**exp)
+    y_end = y1/(2**exp)
+    (x_start..x_end).each{|x|
+        (y_start..y_end).each{|y|
+            x_range_start = x*(2**exp)
+            x_range_end = x_range_start | ((2**exp)-1)
+            y_range_start = y*(2**exp)
+            y_range_end = y_range_start | ((2**exp)-1)
+            puts &quot;#{x},#{y} x from #{x_range_start} to #{x_range_end}, y from #{y_range_start} to #{y_range_end}&quot;
+
+            # Turn it into interleaved form for ZRANGE query.
+            # We assume we need 9 bits for each integer, so the final
+            # interleaved representation will be 18 bits.
+            xbin = x_range_start.to_s(2).rjust(9,&#39;0&#39;)
+            ybin = y_range_start.to_s(2).rjust(9,&#39;0&#39;)
+            s = xbin.split(&quot;&quot;).zip(ybin.split(&quot;&quot;)).flatten.compact.join(&quot;&quot;)
+            # Now that we have the start of the range, calculate the end
+            # by replacing the specified number of bits from 0 to 1.
+            e = s[0..-(bits+1)]+(&quot;1&quot;*bits)
+            puts &quot;ZRANGE myindex [#{s} [#{e} BYLEX&quot;
+        }
+    }
+end
+
+spacequery(50,100,100,300,6)
+</code></pre></div>
+<p>While non immediately trivial this is a very useful indexing strategy that
+in the future may be implemented in Redis in a native way.
+For now, the good thing is that the complexity may be easily encapsulated
+inside a library that can be used in order to perform indexing and queries.
+One example of such library is <a href="https://github.com/antirez/redimension">Redimension</a>, a proof of concept Ruby library which indexes N-dimensional data inside Redis using the technique described here.</p>
+<h1 id="multi-dimensional-indexes-with-negative-or-floating-point-numbers">Multi dimensional indexes with negative or floating point numbers<a class="headerlink" href="#multi-dimensional-indexes-with-negative-or-floating-point-numbers" title="Permanent link">⚓︎</a></h1>
+<p>The simplest way to represent negative values is just to work with unsigned
+integers and represent them using an offset, so that when you index, before
+translating numbers in the indexed representation, you add the absolute value
+of your smaller negative integer.</p>
+<p>For floating point numbers, the simplest approach is probably to convert them
+to integers by multiplying the integer for a power of ten proportional to the
+number of digits after the dot you want to retain.</p>
+<h1 id="non-range-indexes">Non range indexes<a class="headerlink" href="#non-range-indexes" title="Permanent link">⚓︎</a></h1>
+<p>So far we checked indexes which are useful to query by range or by single
+item. However other Redis data structures such as Sets or Lists can be used
+in order to build other kind of indexes. They are very commonly used but
+maybe we don't always realize they are actually a form of indexing.</p>
+<p>For instance I can index object IDs into a Set data type in order to use
+the <em>get random elements</em> operation via <code>SRANDMEMBER</code> in order to retrieve
+a set of random objects. Sets can also be used to check for existence when
+all I need is to test if a given item exists or not or has a single boolean
+property or not.</p>
+<p>Similarly lists can be used in order to index items into a fixed order.
+I can add all my items into a Redis list and rotate the list with
+<code>RPOPLPUSH</code> using the same key name as source and destination. This is useful
+when I want to process a given set of items again and again forever in the
+same order. Think of an RSS feed system that needs to refresh the local copy
+periodically.</p>
+<p>Another popular index often used with Redis is a <strong>capped list</strong>, where items
+are added with <code>LPUSH</code> and trimmed with <code>LTRIM</code>, in order to create a view
+with just the latest N items encountered, in the same order they were
+seen.</p>
+<h1 id="index-inconsistency">Index inconsistency<a class="headerlink" href="#index-inconsistency" title="Permanent link">⚓︎</a></h1>
+<p>Keeping the index updated may be challenging, in the course of months
+or years it is possible that inconsistencies are added because of software
+bugs, network partitions or other events.</p>
+<p>Different strategies could be used. If the index data is outside Redis
+<em>read repair</em> can be a solution, where data is fixed in a lazy way when
+it is requested. When we index data which is stored in Redis itself
+the <code>SCAN</code> family of commands can be used in order to verify, update or
+rebuild the index from scratch, incrementally.</p>
+
+  <hr>
+<div class="md-source-file">
+  <small>
+    
+      最后更新:
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 25, 2023</span>
+      
+        <br>
+        创建日期:
+        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 25, 2023</span>
+      
+    
+  </small>
+</div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../twitter-clone/" class="md-footer__link md-footer__link--prev" aria-label="上一页: Redis patterns example">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                Redis patterns example
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../pipelining/" class="md-footer__link md-footer__link--next" aria-label="下一页: Redis pipelining">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                Redis pipelining
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2023 Ean Yang
+    </div>
+  
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/YQisme" target="_blank" rel="noopener" title="github主页" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://space.bilibili.com/244185393?spm_id_from=333.788.0.0" target="_blank" rel="noopener" title="b站主页" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M488.6 104.1c16.7 18.1 24.4 39.7 23.3 65.7v202.4c-.4 26.4-9.2 48.1-26.5 65.1-17.2 17-39.1 25.9-65.5 26.7H92.02c-26.45-.8-48.21-9.8-65.28-27.2C9.682 419.4.767 396.5 0 368.2V169.8c.767-26 9.682-47.6 26.74-65.7C43.81 87.75 65.57 78.77 92.02 78h29.38L96.05 52.19c-5.75-5.73-8.63-13-8.63-21.79 0-8.8 2.88-16.06 8.63-21.797C101.8 2.868 109.1 0 117.9 0s16.1 2.868 21.9 8.603L213.1 78h88l74.5-69.397C381.7 2.868 389.2 0 398 0c8.8 0 16.1 2.868 21.9 8.603 5.7 5.737 8.6 12.997 8.6 21.797 0 8.79-2.9 16.06-8.6 21.79L394.6 78h29.3c26.4.77 48 9.75 64.7 26.1zm-38.8 69.7c-.4-9.6-3.7-17.4-10.7-23.5-5.2-6.1-14-9.4-22.7-9.8H96.05c-9.59.4-17.45 3.7-23.58 9.8-6.14 6.1-9.4 13.9-9.78 23.5v194.4c0 9.2 3.26 17 9.78 23.5s14.38 9.8 23.58 9.8H416.4c9.2 0 17-3.3 23.3-9.8 6.3-6.5 9.7-14.3 10.1-23.5V173.8zm-264.3 42.7c6.3 6.3 9.7 14.1 10.1 23.2V273c-.4 9.2-3.7 16.9-9.8 23.2-6.2 6.3-14 9.5-23.6 9.5-9.6 0-17.5-3.2-23.6-9.5-6.1-6.3-9.4-14-9.8-23.2v-33.3c.4-9.1 3.8-16.9 10.1-23.2 6.3-6.3 13.2-9.6 23.3-10 9.2.4 17 3.7 23.3 10zm191.5 0c6.3 6.3 9.7 14.1 10.1 23.2V273c-.4 9.2-3.7 16.9-9.8 23.2-6.1 6.3-14 9.5-23.6 9.5-9.6 0-17.4-3.2-23.6-9.5-7-6.3-9.4-14-9.7-23.2v-33.3c.3-9.1 3.7-16.9 10-23.2 6.3-6.3 14.1-9.6 23.3-10 9.2.4 17 3.7 23.3 10z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://eanyang7.com" target="_blank" rel="noopener" title="个人主页" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M112 48a48 48 0 1 1 96 0 48 48 0 1 1-96 0zm40 304v128c0 17.7-14.3 32-32 32s-32-14.3-32-32V256.9l-28.6 47.6c-9.1 15.1-28.8 20-43.9 10.9s-20-28.8-10.9-43.9l58.3-97c17.4-28.9 48.6-46.6 82.3-46.6h29.7c33.7 0 64.9 17.7 82.3 46.6l58.3 97c9.1 15.1 4.2 34.8-10.9 43.9s-34.8 4.2-43.9-10.9L232 256.9V480c0 17.7-14.3 32-32 32s-32-14.3-32-32V352h-16z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.tracking", "navigation.prune", "navigation.top", "toc.follow", "header.autohide", "navigation.footer", "search.suggest", "search.highlight", "search.share", "content.action.edit", "content.action.view", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.6c14ae12.min.js"></script>
+      
+    
+  </body>
+</html>

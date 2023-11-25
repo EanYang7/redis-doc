@@ -1,0 +1,2814 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Executing Lua in Redis
+">
+      
+      
+        <meta name="author" content="Ean Yang">
+      
+      
+        <link rel="canonical" href="https://eanyang7.github.io/redis-doc/5-interact/programmability/lua-api/">
+      
+      
+        <link rel="prev" href="../functions-intro/">
+      
+      
+        <link rel="next" href="../lua-debugging/">
+      
+      
+      <link rel="icon" href="../../../assets/favicon.jpg">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.12">
+    
+    
+      
+        <title>Redis Lua API reference - redis 文档</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.fad675c6.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.356b1318.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="red" data-md-color-accent="deep-purple">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#sandbox-context" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="redis 文档" class="md-header__button md-logo" aria-label="redis 文档" data-md-component="logo">
+      
+  <img src="../../../assets/logo.jpg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            redis 文档
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Redis Lua API reference
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="red" data-md-color-accent="deep-purple"  aria-label="切换为暗黑模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换为暗黑模式" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5c-.84 0-1.65.15-2.39.42L12 2M3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29L3.34 7m.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14L3.36 17M20.65 7l-1.77 3.79a7.023 7.023 0 0 0-2.38-4.15l4.15.36m-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29L20.64 17M12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44L12 22Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="red"  aria-label="切换为浅色模式"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="切换为浅色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3 3.19.09m3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95 2.06.05m-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7 0-.24-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91 1.61 0 2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08Z"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/EanYang7/redis-doc" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M186.1 328.7c0 20.9-10.9 55.1-36.7 55.1s-36.7-34.2-36.7-55.1 10.9-55.1 36.7-55.1 36.7 34.2 36.7 55.1zM480 278.2c0 31.9-3.2 65.7-17.5 95-37.9 76.6-142.1 74.8-216.7 74.8-75.8 0-186.2 2.7-225.6-74.8-14.6-29-20.2-63.1-20.2-95 0-41.9 13.9-81.5 41.5-113.6-5.2-15.8-7.7-32.4-7.7-48.8 0-21.5 4.9-32.3 14.6-51.8 45.3 0 74.3 9 108.8 36 29-6.9 58.8-10 88.7-10 27 0 54.2 2.9 80.4 9.2 34-26.7 63-35.2 107.8-35.2 9.8 19.5 14.6 30.3 14.6 51.8 0 16.4-2.6 32.7-7.7 48.2 27.5 32.4 39 72.3 39 114.2zm-64.3 50.5c0-43.9-26.7-82.6-73.5-82.6-18.9 0-37 3.4-56 6-14.9 2.3-29.8 3.2-45.1 3.2-15.2 0-30.1-.9-45.1-3.2-18.7-2.6-37-6-56-6-46.8 0-73.5 38.7-73.5 82.6 0 87.8 80.4 101.3 150.4 101.3h48.2c70.3 0 150.6-13.4 150.6-101.3zm-82.6-55.1c-25.8 0-36.7 34.2-36.7 55.1s10.9 55.1 36.7 55.1 36.7-34.2 36.7-55.1-10.9-55.1-36.7-55.1z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    github仓库
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="redis 文档" class="md-nav__button md-logo" aria-label="redis 文档" data-md-component="logo">
+      
+  <img src="../../../assets/logo.jpg" alt="logo">
+
+    </a>
+    redis 文档
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/EanYang7/redis-doc" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M186.1 328.7c0 20.9-10.9 55.1-36.7 55.1s-36.7-34.2-36.7-55.1 10.9-55.1 36.7-55.1 36.7 34.2 36.7 55.1zM480 278.2c0 31.9-3.2 65.7-17.5 95-37.9 76.6-142.1 74.8-216.7 74.8-75.8 0-186.2 2.7-225.6-74.8-14.6-29-20.2-63.1-20.2-95 0-41.9 13.9-81.5 41.5-113.6-5.2-15.8-7.7-32.4-7.7-48.8 0-21.5 4.9-32.3 14.6-51.8 45.3 0 74.3 9 108.8 36 29-6.9 58.8-10 88.7-10 27 0 54.2 2.9 80.4 9.2 34-26.7 63-35.2 107.8-35.2 9.8 19.5 14.6 30.3 14.6 51.8 0 16.4-2.6 32.7-7.7 48.2 27.5 32.4 39 72.3 39 114.2zm-64.3 50.5c0-43.9-26.7-82.6-73.5-82.6-18.9 0-37 3.4-56 6-14.9 2.3-29.8 3.2-45.1 3.2-15.2 0-30.1-.9-45.1-3.2-18.7-2.6-37-6-56-6-46.8 0-73.5 38.7-73.5 82.6 0 87.8 80.4 101.3 150.4 101.3h48.2c70.3 0 150.6-13.4 150.6-101.3zm-82.6-55.1c-25.8 0-36.7 34.2-36.7 55.1s10.9 55.1 36.7 55.1 36.7-34.2 36.7-55.1-10.9-55.1-36.7-55.1z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    github仓库
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Documentation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../0-about/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    0 about
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../1-get-started/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    1 get started
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../2-install/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    2 install
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../3-connect/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    3 connect
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../4-data-types/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    4 data types
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    5 interact
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            5 interact
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../_index/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+     index
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../pubsub/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis Pub/Sub
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../transactions/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Transactions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7_4" id="__nav_7_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Programmability
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7_4">
+            <span class="md-nav__icon md-icon"></span>
+            Programmability
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../_index/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis programmability
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../eval-intro/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Scripting with Lua
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../functions-intro/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis functions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Redis Lua API reference
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Redis Lua API reference
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#sandbox-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sandbox context
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Sandbox context">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#global-variables-and-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Global variables and functions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#imported-lua-modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      Imported Lua modules
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runtime-globals" class="md-nav__link">
+    <span class="md-ellipsis">
+      Runtime globals
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Runtime globals">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-redis-singleton" class="md-nav__link">
+    <span class="md-ellipsis">
+      The redis singleton
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-keys-global-variable" class="md-nav__link">
+    <span class="md-ellipsis">
+      The KEYS global variable
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-argv-global-variable" class="md-nav__link">
+    <span class="md-ellipsis">
+      The ARGV global variable
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#redis-object" class="md-nav__link">
+    <span class="md-ellipsis">
+      redis object
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="redis object">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rediscallcommand-arg" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.call(command [,arg...])
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redispcallcommand-arg" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.pcall(command [,arg...])
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rediserror_replyx" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.error_reply(x)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redisstatus_replyx" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.status_reply(x)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redissha1hexx" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.sha1hex(x)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redisloglevel-message" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.log(level, message)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redissetrespx" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.setresp(x)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redisset_replx" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.set_repl(x)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redisreplicate_commands" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.replicate_commands()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redisbreakpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+        redis.breakpoint()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redisdebugx" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.debug(x)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redisacl_check_cmdcommand-arg" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.acl_check_cmd(command [,arg...])
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redisregister_function" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.register_function
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="redis.register_function">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#positional-arguments-redisregister_functionname-callback" class="md-nav__link">
+    <span class="md-ellipsis">
+       positional arguments: redis.register_function(name, callback)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#named-arguments-redisregister_functionfunction_namename-callbackcallback-flagsflag1-flag2-descriptiondescription" class="md-nav__link">
+    <span class="md-ellipsis">
+       Named arguments:  redis.register_function{function_name=name, callback=callback, flags={flag1, flag2, ..}, description=description}
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#script-flags" class="md-nav__link">
+    <span class="md-ellipsis">
+       Script flags
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redisredis_version" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.REDIS_VERSION
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redisredis_version_num" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.REDIS_VERSION_NUM
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-type-conversion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data type conversion
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data type conversion">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#resp2-to-lua-type-conversion" class="md-nav__link">
+    <span class="md-ellipsis">
+      RESP2 to Lua type conversion
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lua-to-resp2-type-conversion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Lua to RESP2 type conversion
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Lua to RESP2 type conversion">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#resp3-to-lua-type-conversion" class="md-nav__link">
+    <span class="md-ellipsis">
+      RESP3 to Lua type conversion
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lua-to-resp3-type-conversion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Lua to RESP3 type conversion
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional-notes-about-scripting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Additional notes about scripting
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Additional notes about scripting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-select-inside-scripts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using SELECT inside scripts
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runtime-libraries" class="md-nav__link">
+    <span class="md-ellipsis">
+      Runtime libraries
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Runtime libraries">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#struct-library" class="md-nav__link">
+    <span class="md-ellipsis">
+       struct library
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="struct library">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#struct-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+       struct formats
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#structpackx" class="md-nav__link">
+    <span class="md-ellipsis">
+       struct.pack(x)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#structunpackx" class="md-nav__link">
+    <span class="md-ellipsis">
+       struct.unpack(x)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#structsizex" class="md-nav__link">
+    <span class="md-ellipsis">
+       struct.size(x)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cjson-library" class="md-nav__link">
+    <span class="md-ellipsis">
+       cjson library
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="cjson library">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cjsonencodex" class="md-nav__link">
+    <span class="md-ellipsis">
+       cjson.encode(x)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cjsondecodex" class="md-nav__link">
+    <span class="md-ellipsis">
+       cjson.decode(x)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cmsgpack-library" class="md-nav__link">
+    <span class="md-ellipsis">
+       cmsgpack library
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="cmsgpack library">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cmsgpackpackx" class="md-nav__link">
+    <span class="md-ellipsis">
+       cmsgpack.pack(x)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cmsgpackunpackx" class="md-nav__link">
+    <span class="md-ellipsis">
+       cmsgpack.unpack(x)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bit-library" class="md-nav__link">
+    <span class="md-ellipsis">
+       bit library
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="bit library">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bittobitx" class="md-nav__link">
+    <span class="md-ellipsis">
+       bit.tobit(x)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bittohexx-n" class="md-nav__link">
+    <span class="md-ellipsis">
+       bit.tohex(x [,n])
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bitbnotx" class="md-nav__link">
+    <span class="md-ellipsis">
+       bit.bnot(x)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bitbnotx-bitborx1-x2-bitbandx1-x2-and-bitbxorx1-x2" class="md-nav__link">
+    <span class="md-ellipsis">
+       bit.bnot(x) bit.bor(x1 [,x2...]), bit.band(x1 [,x2...]) and bit.bxor(x1 [,x2...])
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bitlshiftx-n-bitrshiftx-n-and-bitarshiftx-n" class="md-nav__link">
+    <span class="md-ellipsis">
+       bit.lshift(x, n), bit.rshift(x, n) and bit.arshift(x, n)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bitrolx-n-and-bitrorx-n" class="md-nav__link">
+    <span class="md-ellipsis">
+       bit.rol(x, n) and bit.ror(x, n)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bitbswapx" class="md-nav__link">
+    <span class="md-ellipsis">
+       bit.bswap(x)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../lua-debugging/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Debugging Lua scripts in Redis
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../6-manual/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    6 manual
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../7-management/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    7 management
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../8-reference/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    8 reference
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#sandbox-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      Sandbox context
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Sandbox context">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#global-variables-and-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      Global variables and functions
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#imported-lua-modules" class="md-nav__link">
+    <span class="md-ellipsis">
+      Imported Lua modules
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runtime-globals" class="md-nav__link">
+    <span class="md-ellipsis">
+      Runtime globals
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Runtime globals">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-redis-singleton" class="md-nav__link">
+    <span class="md-ellipsis">
+      The redis singleton
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-keys-global-variable" class="md-nav__link">
+    <span class="md-ellipsis">
+      The KEYS global variable
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-argv-global-variable" class="md-nav__link">
+    <span class="md-ellipsis">
+      The ARGV global variable
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#redis-object" class="md-nav__link">
+    <span class="md-ellipsis">
+      redis object
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="redis object">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rediscallcommand-arg" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.call(command [,arg...])
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redispcallcommand-arg" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.pcall(command [,arg...])
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rediserror_replyx" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.error_reply(x)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redisstatus_replyx" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.status_reply(x)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redissha1hexx" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.sha1hex(x)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redisloglevel-message" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.log(level, message)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redissetrespx" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.setresp(x)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redisset_replx" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.set_repl(x)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redisreplicate_commands" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.replicate_commands()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redisbreakpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+        redis.breakpoint()
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redisdebugx" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.debug(x)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redisacl_check_cmdcommand-arg" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.acl_check_cmd(command [,arg...])
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redisregister_function" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.register_function
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="redis.register_function">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#positional-arguments-redisregister_functionname-callback" class="md-nav__link">
+    <span class="md-ellipsis">
+       positional arguments: redis.register_function(name, callback)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#named-arguments-redisregister_functionfunction_namename-callbackcallback-flagsflag1-flag2-descriptiondescription" class="md-nav__link">
+    <span class="md-ellipsis">
+       Named arguments:  redis.register_function{function_name=name, callback=callback, flags={flag1, flag2, ..}, description=description}
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#script-flags" class="md-nav__link">
+    <span class="md-ellipsis">
+       Script flags
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redisredis_version" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.REDIS_VERSION
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redisredis_version_num" class="md-nav__link">
+    <span class="md-ellipsis">
+       redis.REDIS_VERSION_NUM
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-type-conversion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data type conversion
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Data type conversion">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#resp2-to-lua-type-conversion" class="md-nav__link">
+    <span class="md-ellipsis">
+      RESP2 to Lua type conversion
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lua-to-resp2-type-conversion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Lua to RESP2 type conversion
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Lua to RESP2 type conversion">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#resp3-to-lua-type-conversion" class="md-nav__link">
+    <span class="md-ellipsis">
+      RESP3 to Lua type conversion
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#lua-to-resp3-type-conversion" class="md-nav__link">
+    <span class="md-ellipsis">
+      Lua to RESP3 type conversion
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#additional-notes-about-scripting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Additional notes about scripting
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Additional notes about scripting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-select-inside-scripts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using SELECT inside scripts
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#runtime-libraries" class="md-nav__link">
+    <span class="md-ellipsis">
+      Runtime libraries
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Runtime libraries">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#struct-library" class="md-nav__link">
+    <span class="md-ellipsis">
+       struct library
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="struct library">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#struct-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+       struct formats
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#structpackx" class="md-nav__link">
+    <span class="md-ellipsis">
+       struct.pack(x)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#structunpackx" class="md-nav__link">
+    <span class="md-ellipsis">
+       struct.unpack(x)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#structsizex" class="md-nav__link">
+    <span class="md-ellipsis">
+       struct.size(x)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cjson-library" class="md-nav__link">
+    <span class="md-ellipsis">
+       cjson library
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="cjson library">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cjsonencodex" class="md-nav__link">
+    <span class="md-ellipsis">
+       cjson.encode(x)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cjsondecodex" class="md-nav__link">
+    <span class="md-ellipsis">
+       cjson.decode(x)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cmsgpack-library" class="md-nav__link">
+    <span class="md-ellipsis">
+       cmsgpack library
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="cmsgpack library">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cmsgpackpackx" class="md-nav__link">
+    <span class="md-ellipsis">
+       cmsgpack.pack(x)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cmsgpackunpackx" class="md-nav__link">
+    <span class="md-ellipsis">
+       cmsgpack.unpack(x)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bit-library" class="md-nav__link">
+    <span class="md-ellipsis">
+       bit library
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="bit library">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#bittobitx" class="md-nav__link">
+    <span class="md-ellipsis">
+       bit.tobit(x)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bittohexx-n" class="md-nav__link">
+    <span class="md-ellipsis">
+       bit.tohex(x [,n])
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bitbnotx" class="md-nav__link">
+    <span class="md-ellipsis">
+       bit.bnot(x)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bitbnotx-bitborx1-x2-bitbandx1-x2-and-bitbxorx1-x2" class="md-nav__link">
+    <span class="md-ellipsis">
+       bit.bnot(x) bit.bor(x1 [,x2...]), bit.band(x1 [,x2...]) and bit.bxor(x1 [,x2...])
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bitlshiftx-n-bitrshiftx-n-and-bitarshiftx-n" class="md-nav__link">
+    <span class="md-ellipsis">
+       bit.lshift(x, n), bit.rshift(x, n) and bit.arshift(x, n)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bitrolx-n-and-bitrorx-n" class="md-nav__link">
+    <span class="md-ellipsis">
+       bit.rol(x, n) and bit.ror(x, n)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bitbswapx" class="md-nav__link">
+    <span class="md-ellipsis">
+       bit.bswap(x)
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+    <a href="https://github.com/EanYang7/redis-doc/tree/main/docs/5-interact/programmability/lua-api.md" title="编辑此页" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/EanYang7/redis-doc/tree/main/docs/5-interact/programmability/lua-api.md" title="查看本页的源代码" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0 8a5 5 0 0 1-5-5 5 5 0 0 1 5-5 5 5 0 0 1 5 5 5 5 0 0 1-5 5m0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5Z"/></svg>
+    </a>
+  
+
+
+  <h1>Redis Lua API reference</h1>
+
+<p>Redis includes an embedded <a href="https://www.lua.org/">Lua 5.1</a> interpreter.
+The interpreter runs user-defined <a href="/topics/eval-intro">ephemeral scripts</a> and <a href="/topics/functions-intro">functions</a>. Scripts run in a sandboxed context and can only access specific Lua packages. This page describes the packages and APIs available inside the execution's context.</p>
+<h2 id="sandbox-context">Sandbox context<a class="headerlink" href="#sandbox-context" title="Permanent link">⚓︎</a></h2>
+<p>The sandboxed Lua context attempts to prevent accidental misuse and reduce potential threats from the server's environment.</p>
+<p>Scripts should never try to access the Redis server's underlying host systems.
+That includes the file system, network, and any other attempt to perform a system call other than those supported by the API.</p>
+<p>Scripts should operate solely on data stored in Redis and data provided as arguments to their execution.</p>
+<h3 id="global-variables-and-functions">Global variables and functions<a class="headerlink" href="#global-variables-and-functions" title="Permanent link">⚓︎</a></h3>
+<p>The sandboxed Lua execution context blocks the declaration of global variables and functions.
+The blocking of global variables is in place to ensure that scripts and functions don't attempt to maintain any runtime context other than the data stored in Redis.
+In the (somewhat uncommon) use case that a context needs to be maintain between executions,
+you should store the context in Redis' keyspace.</p>
+<p>Redis will return a "Script attempted to create global variable 'my_global_variable" error when trying to execute the following snippet:</p>
+<div class="highlight"><pre><span></span><code><span class="n">my_global_variable</span> <span class="o">=</span> <span class="s1">&#39;some value&#39;</span>
+</code></pre></div>
+<p>And similarly for the following global function declaration:</p>
+<div class="highlight"><pre><span></span><code><span class="kr">function</span> <span class="nf">my_global_function</span><span class="p">()</span>
+  <span class="c1">-- Do something amazing</span>
+<span class="kr">end</span>
+</code></pre></div>
+<p>You'll also get a similar error when your script attempts to access any global variables that are undefined in the runtime's context:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">-- The following will surely raise an error</span>
+<span class="kr">return</span> <span class="n">an_undefined_global_variable</span>
+</code></pre></div>
+<p>Instead, all variable and function definitions are required to be declared as local.
+To do so, you'll need to prepend the <a href="https://www.lua.org/manual/5.1/manual.html#2.4.7"><em>local</em></a> keyword to your declarations.
+For example, the following snippet will be considered perfectly valid by Redis:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">local</span> <span class="n">my_local_variable</span> <span class="o">=</span> <span class="s1">&#39;some value&#39;</span>
+
+<span class="kd">local</span> <span class="kr">function</span> <span class="nf">my_local_function</span><span class="p">()</span>
+  <span class="c1">-- Do something else, but equally amazing</span>
+<span class="kr">end</span>
+</code></pre></div>
+<p><strong>Note:</strong>
+the sandbox attempts to prevent the use of globals.
+Using Lua's debugging functionality or other approaches such as altering the meta table used for implementing the globals' protection to circumvent the sandbox isn't hard.
+However, it is difficult to circumvent the protection by accident.
+If the user messes with the Lua global state, the consistency of AOF and replication can't be guaranteed.
+In other words, just don't do it.</p>
+<h3 id="imported-lua-modules">Imported Lua modules<a class="headerlink" href="#imported-lua-modules" title="Permanent link">⚓︎</a></h3>
+<p>Using imported Lua modules is not supported inside the sandboxed execution context.
+The sandboxed execution context prevents the loading modules by disabling Lua's <a href="https://www.lua.org/pil/8.1.html"><code>require</code> function</a>.</p>
+<p>The only libraries that Redis ships with and that you can use in scripts are listed under the <a href="#runtime-libraries">Runtime libraries</a> section.</p>
+<h2 id="runtime-globals">Runtime globals<a class="headerlink" href="#runtime-globals" title="Permanent link">⚓︎</a></h2>
+<p>While the sandbox prevents users from declaring globals, the execution context is pre-populated with several of these.</p>
+<h3 id="the-redis-singleton">The <em>redis</em> singleton<a class="headerlink" href="#the-redis-singleton" title="Permanent link">⚓︎</a></h3>
+<p>The <em>redis</em> singleton is an object instance that's accessible from all scripts.
+It provides the API to interact with Redis from scripts.
+Its description follows <a href="#redis_object">below</a>.</p>
+<h3 id="the-keys-global-variable"><a name="the-keys-global-variable"></a>The <em>KEYS</em> global variable<a class="headerlink" href="#the-keys-global-variable" title="Permanent link">⚓︎</a></h3>
+<ul>
+<li>Since version: 2.6.0</li>
+<li>Available in scripts: yes</li>
+<li>Available in functions: no</li>
+</ul>
+<p><strong>Important:</strong>
+to ensure the correct execution of scripts, both in standalone and clustered deployments, all names of keys that a function accesses must be explicitly provided as input key arguments.
+The script <strong>should only</strong> access keys whose names are given as input arguments.
+Scripts <strong>should never</strong> access keys with programmatically-generated names or based on the contents of data structures stored in the database.</p>
+<p>The <em>KEYS</em> global variable is available only for <a href="/topics/eval-intro">ephemeral scripts</a>.
+It is pre-populated with all key name input arguments.</p>
+<h3 id="the-argv-global-variable"><a name="the-argv-global-variable"></a>The <em>ARGV</em> global variable<a class="headerlink" href="#the-argv-global-variable" title="Permanent link">⚓︎</a></h3>
+<ul>
+<li>Since version: 2.6.0</li>
+<li>Available in scripts: yes</li>
+<li>Available in functions: no</li>
+</ul>
+<p>The <em>ARGV</em> global variable is available only in <a href="/topics/eval-intro">ephemeral scripts</a>.
+It is pre-populated with all regular input arguments.</p>
+<h2 id="redis-object"><a name="redis_object"></a><em>redis</em> object<a class="headerlink" href="#redis-object" title="Permanent link">⚓︎</a></h2>
+<ul>
+<li>Since version: 2.6.0</li>
+<li>Available in scripts: yes</li>
+<li>Available in functions: yes</li>
+</ul>
+<p>The Redis Lua execution context always provides a singleton instance of an object named <em>redis</em>.
+The <em>redis</em> instance enables the script to interact with the Redis server that's running it.
+Following is the API provided by the <em>redis</em> object instance.</p>
+<h3 id="rediscallcommand-arg"><a name="redis.call"></a> <code>redis.call(command [,arg...])</code><a class="headerlink" href="#rediscallcommand-arg" title="Permanent link">⚓︎</a></h3>
+<ul>
+<li>Since version: 2.6.0</li>
+<li>Available in scripts: yes</li>
+<li>Available in functions: yes</li>
+</ul>
+<p>The <code>redis.call()</code> function calls a given Redis command and returns its reply.
+Its inputs are the command and arguments, and once called, it executes the command in Redis and returns the reply.</p>
+<p>For example, we can call the <code>ECHO</code> command from a script and return its reply like so:</p>
+<div class="highlight"><pre><span></span><code><span class="kr">return</span> <span class="n">redis</span><span class="p">.</span><span class="n">call</span><span class="p">(</span><span class="s1">&#39;ECHO&#39;</span><span class="p">,</span> <span class="s1">&#39;Echo, echo... eco... o...&#39;</span><span class="p">)</span>
+</code></pre></div>
+<p>If and when <code>redis.call()</code> triggers a runtime exception, the raw exception is raised back to the user as an error, automatically.
+Therefore, attempting to execute the following ephemeral script will fail and generate a runtime exception because <code>ECHO</code> accepts exactly one argument:</p>
+<div class="highlight"><pre><span></span><code><span class="n">redis</span><span class="o">&gt;</span> <span class="n">EVAL</span> <span class="s2">&quot;return redis.call(&#39;ECHO&#39;, &#39;Echo,&#39;, &#39;echo... &#39;, &#39;eco... &#39;, &#39;o...&#39;)&quot;</span> <span class="mi">0</span>
+<span class="p">(</span><span class="nb">error</span><span class="p">)</span> <span class="n">ERR</span> <span class="n">Wrong</span> <span class="n">number</span> <span class="n">of</span> <span class="n">args</span> <span class="n">calling</span> <span class="n">Redis</span> <span class="n">command</span> <span class="n">from</span> <span class="n">script</span> <span class="n">script</span><span class="p">:</span> <span class="n">b0345693f4b77517a711221050e76d24ae60b7f7</span><span class="p">,</span> <span class="n">on</span> <span class="err">@</span><span class="n">user_script</span><span class="p">:</span><span class="mf">1.</span>
+</code></pre></div>
+<p>Note that the call can fail due to various reasons, see <a href="/topics/eval-intro#execution-under-low-memory-conditions">Execution under low memory conditions</a> and <a href="#script_flags">Script flags</a></p>
+<p>To handle Redis runtime errors use <code>redis.pcall()</code> instead.</p>
+<h3 id="redispcallcommand-arg"><a name="redis.pcall"></a> <code>redis.pcall(command [,arg...])</code><a class="headerlink" href="#redispcallcommand-arg" title="Permanent link">⚓︎</a></h3>
+<ul>
+<li>Since version: 2.6.0</li>
+<li>Available in scripts: yes</li>
+<li>Available in functions: yes</li>
+</ul>
+<p>This function enables handling runtime errors raised by the Redis server.
+The <code>redis.pcall()</code> function  behaves exactly like <a href="#redis.call"><code>redis.call()</code></a>, except that it:</p>
+<ul>
+<li>Always returns a reply.</li>
+<li>Never throws a runtime exception, and returns in its stead a <a href="#redis.error_reply"><code>redis.error_reply</code></a> in case that a runtime exception is thrown by the server.</li>
+</ul>
+<p>The following demonstrates how to use <code>redis.pcall()</code> to intercept and handle runtime exceptions from within the context of an ephemeral script.</p>
+<div class="highlight"><pre><span></span><code><span class="kd">local</span> <span class="n">reply</span> <span class="o">=</span> <span class="n">redis</span><span class="p">.</span><span class="n">pcall</span><span class="p">(</span><span class="s1">&#39;ECHO&#39;</span><span class="p">,</span> <span class="n">unpack</span><span class="p">(</span><span class="n">ARGV</span><span class="p">))</span>
+<span class="kr">if</span> <span class="n">reply</span><span class="p">[</span><span class="s1">&#39;err&#39;</span><span class="p">]</span> <span class="o">~=</span> <span class="kc">nil</span> <span class="kr">then</span>
+  <span class="c1">-- Handle the error sometime, but for now just log it</span>
+  <span class="n">redis</span><span class="p">.</span><span class="n">log</span><span class="p">(</span><span class="n">redis</span><span class="p">.</span><span class="n">LOG_WARNING</span><span class="p">,</span> <span class="n">reply</span><span class="p">[</span><span class="s1">&#39;err&#39;</span><span class="p">])</span>
+  <span class="n">reply</span><span class="p">[</span><span class="s1">&#39;err&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;ERR Something is wrong, but no worries, everything is under control&#39;</span>
+<span class="kr">end</span>
+<span class="kr">return</span> <span class="n">reply</span>
+</code></pre></div>
+<p>Evaluating this script with more than one argument will return:</p>
+<div class="highlight"><pre><span></span><code>redis&gt; EVAL &quot;...&quot; 0 hello world
+(error) ERR Something is wrong, but no worries, everything is under control
+</code></pre></div>
+<h3 id="rediserror_replyx"><a name="redis.error_reply"></a> <code>redis.error_reply(x)</code><a class="headerlink" href="#rediserror_replyx" title="Permanent link">⚓︎</a></h3>
+<ul>
+<li>Since version: 2.6.0</li>
+<li>Available in scripts: yes</li>
+<li>Available in functions: yes</li>
+</ul>
+<p>This is a helper function that returns an <a href="/topics/protocol#resp-errors">error reply</a>.
+The helper accepts a single string argument and returns a Lua table with the <em>err</em> field set to that string.</p>
+<p>The outcome of the following code is that <em>error1</em> and <em>error2</em> are identical for all intents and purposes:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">local</span> <span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;ERR My very special error&#39;</span>
+<span class="kd">local</span> <span class="n">reply1</span> <span class="o">=</span> <span class="p">{</span> <span class="n">err</span> <span class="o">=</span> <span class="n">text</span> <span class="p">}</span>
+<span class="kd">local</span> <span class="n">reply2</span> <span class="o">=</span> <span class="n">redis</span><span class="p">.</span><span class="n">error_reply</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</code></pre></div>
+<p>Therefore, both forms are valid as means for returning an error reply from scripts:</p>
+<div class="highlight"><pre><span></span><code>redis&gt; EVAL &quot;return { err = &#39;ERR My very special table error&#39; }&quot; 0
+(error) ERR My very special table error
+redis&gt; EVAL &quot;return redis.error_reply(&#39;ERR My very special reply error&#39;)&quot; 0
+(error) ERR My very special reply error
+</code></pre></div>
+<p>For returning Redis status replies refer to <a href="#redis.status_reply"><code>redis.status_reply()</code></a>.
+Refer to the <a href="#data-type-conversion">Data type conversion</a> for returning other response types.</p>
+<p><strong>Note:</strong>
+By convention, Redis uses the first word of an error string as a unique error code for specific errors or <code>ERR</code> for general-purpose errors.
+Scripts are advised to follow this convention, as shown in the example above, but this is not mandatory.</p>
+<h3 id="redisstatus_replyx"><a name="redis.status_reply"></a> <code>redis.status_reply(x)</code><a class="headerlink" href="#redisstatus_replyx" title="Permanent link">⚓︎</a></h3>
+<ul>
+<li>Since version: 2.6.0</li>
+<li>Available in scripts: yes</li>
+<li>Available in functions: yes</li>
+</ul>
+<p>This is a helper function that returns a <a href="/topics/protocol#resp-simple-strings">simple string reply</a>.
+"OK" is an example of a standard Redis status reply.
+The Lua API represents status replies as tables with a single field, <em>ok</em>, set with a simple status string.</p>
+<p>The outcome of the following code is that <em>status1</em> and <em>status2</em> are identical for all intents and purposes:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">local</span> <span class="n">text</span> <span class="o">=</span> <span class="s1">&#39;Frosty&#39;</span>
+<span class="kd">local</span> <span class="n">status1</span> <span class="o">=</span> <span class="p">{</span> <span class="n">ok</span> <span class="o">=</span> <span class="n">text</span> <span class="p">}</span>
+<span class="kd">local</span> <span class="n">status2</span> <span class="o">=</span> <span class="n">redis</span><span class="p">.</span><span class="n">status_reply</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</code></pre></div>
+<p>Therefore, both forms are valid as means for returning status replies from scripts:</p>
+<div class="highlight"><pre><span></span><code>redis&gt; EVAL &quot;return { ok = &#39;TICK&#39; }&quot; 0
+TICK
+redis&gt; EVAL &quot;return redis.status_reply(&#39;TOCK&#39;)&quot; 0
+TOCK
+</code></pre></div>
+<p>For returning Redis error replies refer to <a href="#redis.error_reply"><code>redis.error_reply()</code></a>.
+Refer to the <a href="#data-type-conversion">Data type conversion</a> for returning other response types.</p>
+<h3 id="redissha1hexx"><a name="redis.sha1hex"></a> <code>redis.sha1hex(x)</code><a class="headerlink" href="#redissha1hexx" title="Permanent link">⚓︎</a></h3>
+<ul>
+<li>Since version: 2.6.0</li>
+<li>Available in scripts: yes</li>
+<li>Available in functions: yes</li>
+</ul>
+<p>This function returns the SHA1 hexadecimal digest of its single string argument.</p>
+<p>You can, for example, obtain the empty string's SHA1 digest:</p>
+<div class="highlight"><pre><span></span><code>redis&gt; EVAL &quot;return redis.sha1hex(&#39;&#39;)&quot; 0
+&quot;da39a3ee5e6b4b0d3255bfef95601890afd80709&quot;
+</code></pre></div>
+<h3 id="redisloglevel-message"><a name="redis.log"></a> <code>redis.log(level, message)</code><a class="headerlink" href="#redisloglevel-message" title="Permanent link">⚓︎</a></h3>
+<ul>
+<li>Since version: 2.6.0</li>
+<li>Available in scripts: yes</li>
+<li>Available in functions: yes</li>
+</ul>
+<p>This function writes to the Redis server log.</p>
+<p>It expects two input arguments: the log level and a message.
+The message is a string to write to the log file.
+Log level can be on of these:</p>
+<ul>
+<li><code>redis.LOG_DEBUG</code></li>
+<li><code>redis.LOG_VERBOSE</code></li>
+<li><code>redis.LOG_NOTICE</code></li>
+<li><code>redis.LOG_WARNING</code></li>
+</ul>
+<p>These levels map to the server's log levels.
+The log only records messages equal or greater in level than the server's <code>loglevel</code> configuration directive.</p>
+<p>The following snippet:</p>
+<div class="highlight"><pre><span></span><code><span class="n">redis</span><span class="p">.</span><span class="n">log</span><span class="p">(</span><span class="n">redis</span><span class="p">.</span><span class="n">LOG_WARNING</span><span class="p">,</span> <span class="s1">&#39;Something is terribly wrong&#39;</span><span class="p">)</span>
+</code></pre></div>
+<p>will produce a line similar to the following in your server's log:</p>
+<div class="highlight"><pre><span></span><code>[32343] 22 Mar 15:21:39 # Something is terribly wrong
+</code></pre></div>
+<h3 id="redissetrespx"><a name="redis.setresp"></a> <code>redis.setresp(x)</code><a class="headerlink" href="#redissetrespx" title="Permanent link">⚓︎</a></h3>
+<ul>
+<li>Since version: 6.0.0</li>
+<li>Available in scripts: yes</li>
+<li>Available in functions: yes</li>
+</ul>
+<p>This function allows the executing script to switch between <a href="/topics/protocol">Redis Serialization Protocol (RESP)</a> versions for the replies returned by <a href="#redis.call"><code>redis.call()</code></a> and <a href="#redis.pcall"><code>redis.pcall()</code></a>.
+It expects a single numerical argument as the protocol's version.
+The default protocol version is <em>2</em>, but it can be switched to version <em>3</em>.</p>
+<p>Here's an example of switching to RESP3 replies:</p>
+<div class="highlight"><pre><span></span><code><span class="n">redis</span><span class="p">.</span><span class="n">setresp</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+</code></pre></div>
+<p>Please refer to the <a href="#data-type-conversion">Data type conversion</a> for more information about type conversions.</p>
+<h3 id="redisset_replx"><a name="redis.set_repl"></a> <code>redis.set_repl(x)</code><a class="headerlink" href="#redisset_replx" title="Permanent link">⚓︎</a></h3>
+<ul>
+<li>Since version: 3.2.0</li>
+<li>Available in scripts: yes</li>
+<li>Available in functions: no</li>
+</ul>
+<p><strong>Note:</strong>
+this feature is only available when script effects replication is employed.
+Calling it when using verbatim script replication will result in an error.
+As of Redis version 2.6.0, scripts were replicated verbatim, meaning that the scripts' source code was sent for execution by replicas and stored in the AOF.
+An alternative replication mode added in version 3.2.0 allows replicating only the scripts' effects.
+As of Redis version 7.0, script replication is no longer supported, and the only replication mode available is script effects replication.</p>
+<p><strong>Warning:</strong>
+this is an advanced feature. Misuse can cause damage by violating the contract that binds the Redis master, its replicas, and AOF contents to hold the same logical content.</p>
+<p>This function allows a script to assert control over how its effects are propagated to replicas and the AOF afterward.
+A script's effects are the Redis write commands that it calls.</p>
+<p>By default, all write commands that a script executes are replicated.
+Sometimes, however, better control over this behavior can be helpful.
+This can be the case, for example, when storing intermediate values in the master alone.</p>
+<p>Consider a script that intersects two sets and stores the result in a temporary key with <code>SUNIONSTORE</code>.
+It then picks five random elements (<code>SRANDMEMBER</code>) from the intersection and stores (<code>SADD</code>) them in another set.
+Finally, before returning, it deletes the temporary key that stores the intersection of the two source sets.</p>
+<p>In this case, only the new set with its five randomly-chosen elements needs to be replicated.
+Replicating the <code>SUNIONSTORE</code> command and the <code>DEL</code>ition of the temporary key is unnecessary and wasteful.</p>
+<p>The <code>redis.set_repl()</code> function instructs the server how to treat subsequent write commands in terms of replication.
+It accepts a single input argument that only be one of the following:</p>
+<ul>
+<li><code>redis.REPL_ALL</code>: replicates the effects to the AOF and replicas.</li>
+<li><code>redis.REPL_AOF</code>: replicates the effects to the AOF alone.</li>
+<li><code>redis.REPL_REPLICA</code>: replicates the effects to the replicas alone.</li>
+<li><code>redis.REPL_SLAVE</code>: same as <code>REPL_REPLICA</code>, maintained for backward compatibility.</li>
+<li><code>redis.REPL_NONE</code>: disables effect replication entirely.</li>
+</ul>
+<p>By default, the scripting engine is initialized to the <code>redis.REPL_ALL</code> setting when a script begins its execution.
+You can call the <code>redis.set_repl()</code> function at any time during the script's execution to switch between the different replication modes.</p>
+<p>A simple example follows:</p>
+<div class="highlight"><pre><span></span><code><span class="n">redis</span><span class="p">.</span><span class="n">replicate_commands</span><span class="p">()</span> <span class="c1">-- Enable effects replication in versions lower than Redis v7.0</span>
+<span class="n">redis</span><span class="p">.</span><span class="n">call</span><span class="p">(</span><span class="s1">&#39;SET&#39;</span><span class="p">,</span> <span class="n">KEYS</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ARGV</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">redis</span><span class="p">.</span><span class="n">set_repl</span><span class="p">(</span><span class="n">redis</span><span class="p">.</span><span class="n">REPL_NONE</span><span class="p">)</span>
+<span class="n">redis</span><span class="p">.</span><span class="n">call</span><span class="p">(</span><span class="s1">&#39;SET&#39;</span><span class="p">,</span> <span class="n">KEYS</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">ARGV</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+<span class="n">redis</span><span class="p">.</span><span class="n">set_repl</span><span class="p">(</span><span class="n">redis</span><span class="p">.</span><span class="n">REPL_ALL</span><span class="p">)</span>
+<span class="n">redis</span><span class="p">.</span><span class="n">call</span><span class="p">(</span><span class="s1">&#39;SET&#39;</span><span class="p">,</span> <span class="n">KEYS</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">ARGV</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+</code></pre></div>
+<p>If you run this script by calling <code>EVAL "..." 3 A B C 1 2 3</code>, the result will be that only the keys <em>A</em> and <em>C</em> are created on the replicas and AOF.</p>
+<h3 id="redisreplicate_commands"><a name="redis.replicate_commands"></a> <code>redis.replicate_commands()</code><a class="headerlink" href="#redisreplicate_commands" title="Permanent link">⚓︎</a></h3>
+<ul>
+<li>Since version: 3.2.0</li>
+<li>Until version: 7.0.0</li>
+<li>Available in scripts: yes</li>
+<li>Available in functions: no</li>
+</ul>
+<p>This function switches the script's replication mode from verbatim replication to effects replication.
+You can use it to override the default verbatim script replication mode used by Redis until version 7.0.</p>
+<p><strong>Note:</strong>
+as of Redis v7.0, verbatim script replication is no longer supported.
+The default, and only script replication mode supported, is script effects' replication.
+For more information, please refer to <a href="/topics/eval-intro#replicating-commands-instead-of-scripts"><code>Replicating commands instead of scripts</code></a></p>
+<h3 id="redisbreakpoint"><a name="redis.breakpoint"></a>  <code>redis.breakpoint()</code><a class="headerlink" href="#redisbreakpoint" title="Permanent link">⚓︎</a></h3>
+<ul>
+<li>Since version: 3.2.0</li>
+<li>Available in scripts: yes</li>
+<li>Available in functions: no</li>
+</ul>
+<p>This function triggers a breakpoint when using the <a href="/topics/ldb">Redis Lua debugger</a>.</p>
+<h3 id="redisdebugx"><a name="redis.debug"></a> <code>redis.debug(x)</code><a class="headerlink" href="#redisdebugx" title="Permanent link">⚓︎</a></h3>
+<ul>
+<li>Since version: 3.2.0</li>
+<li>Available in scripts: yes</li>
+<li>Available in functions: no</li>
+</ul>
+<p>This function prints its argument in the <a href="/topics/ldb">Redis Lua debugger</a> console.</p>
+<h3 id="redisacl_check_cmdcommand-arg"><a name="redis.acl_check_cmd"></a> <code>redis.acl_check_cmd(command [,arg...])</code><a class="headerlink" href="#redisacl_check_cmdcommand-arg" title="Permanent link">⚓︎</a></h3>
+<ul>
+<li>Since version: 7.0.0</li>
+<li>Available in scripts: yes</li>
+<li>Available in functions: yes</li>
+</ul>
+<p>This function is used for checking if the current user running the script has <a href="/topics/acl">ACL</a> permissions to execute the given command with the given arguments.</p>
+<p>The return value is a boolean <code>true</code> in case the current user has permissions to execute the command (via a call to <a href="#redis.call">redis.call</a> or <a href="#redis.pcall">redis.pcall</a>) or <code>false</code> in case they don't.</p>
+<p>The function will raise an error if the passed command or its arguments are invalid.</p>
+<h3 id="redisregister_function"><a name="redis.register_function"></a> <code>redis.register_function</code><a class="headerlink" href="#redisregister_function" title="Permanent link">⚓︎</a></h3>
+<ul>
+<li>Since version: 7.0.0</li>
+<li>Available in scripts: no</li>
+<li>Available in functions: yes</li>
+</ul>
+<p>This function is only available from the context of the <code>FUNCTION LOAD</code> command.
+When called, it registers a function to the loaded library.
+The function can be called either with positional or named arguments.</p>
+<h4 id="positional-arguments-redisregister_functionname-callback"><a name="redis.register_function_pos_args"></a> positional arguments: <code>redis.register_function(name, callback)</code><a class="headerlink" href="#positional-arguments-redisregister_functionname-callback" title="Permanent link">⚓︎</a></h4>
+<p>The first argument to <code>redis.register_function</code> is a Lua string representing the function name.
+The second argument to <code>redis.register_function</code> is a Lua function.</p>
+<p>Usage example:</p>
+<div class="highlight"><pre><span></span><code>redis&gt; FUNCTION LOAD &quot;#!lua name=mylib\n redis.register_function(&#39;noop&#39;, function() end)&quot;
+</code></pre></div>
+<h4 id="named-arguments-redisregister_functionfunction_namename-callbackcallback-flagsflag1-flag2-descriptiondescription"><a name="redis.register_function_named_args"></a> Named arguments:  <code>redis.register_function{function_name=name, callback=callback, flags={flag1, flag2, ..}, description=description}</code><a class="headerlink" href="#named-arguments-redisregister_functionfunction_namename-callbackcallback-flagsflag1-flag2-descriptiondescription" title="Permanent link">⚓︎</a></h4>
+<p>The named arguments variant accepts the following arguments:</p>
+<ul>
+<li><em>function_name</em>: the function's name.</li>
+<li><em>callback</em>: the function's callback.</li>
+<li><em>flags</em>: an array of strings, each a function flag (optional).</li>
+<li><em>description</em>: function's description (optional).</li>
+</ul>
+<p>Both <em>function_name</em> and <em>callback</em> are mandatory.</p>
+<p>Usage example:</p>
+<div class="highlight"><pre><span></span><code>redis&gt; FUNCTION LOAD &quot;#!lua name=mylib\n redis.register_function{function_name=&#39;noop&#39;, callback=function() end, flags={ &#39;no-writes&#39; }, description=&#39;Does nothing&#39;}&quot;
+</code></pre></div>
+<h4 id="script-flags"><a name="script_flags"></a> Script flags<a class="headerlink" href="#script-flags" title="Permanent link">⚓︎</a></h4>
+<p><strong>Important:</strong>
+Use script flags with care, which may negatively impact if misused.
+Note that the default for Eval scripts are different than the default for functions that are mentioned below, see <a href="/docs/manual/programmability/eval-intro/#eval-flags">Eval Flags</a></p>
+<p>When you register a function or load an Eval script, the server does not know how it accesses the database.
+By default, Redis assumes that all scripts read and write data.
+This results in the following behavior:</p>
+<ol>
+<li>They can read and write data.</li>
+<li>They can run in cluster mode, and are not able to run commands accessing keys of different hash slots.</li>
+<li>Execution against a stale replica is denied to avoid inconsistent reads.</li>
+<li>Execution under low memory is denied to avoid exceeding the configured threshold.</li>
+</ol>
+<p>You can use the following flags and instruct the server to treat the scripts' execution differently:</p>
+<ul>
+<li>
+<p><code>no-writes</code>: this flag indicates that the script only reads data but never writes.</p>
+<p>By default, Redis will deny the execution of flagged scripts (Functions and Eval scripts with <a href="/topics/eval-intro#eval-flags">shebang</a>) against read-only replicas, as they may attempt to perform writes.
+Similarly, the server will not allow calling scripts with <code>FCALL_RO</code> / <code>EVAL_RO</code>.
+Lastly, when data persistence is at risk due to a disk error, execution is blocked as well.</p>
+<p>Using this flag allows executing the script:
+1. With <code>FCALL_RO</code> / <code>EVAL_RO</code>
+2. On read-only replicas.
+3. Even if there's a disk error (Redis is unable to persist so it rejects writes).
+4. When over the memory limit since it implies the script doesn't increase memory consumption (see <code>allow-oom</code> below)</p>
+<p>However, note that the server will return an error if the script attempts to call a write command.
+Also note that currently <code>PUBLISH</code>, <code>SPUBLISH</code> and <code>PFCOUNT</code> are also considered write commands in scripts, because they could attempt to propagate commands to replicas and AOF file.</p>
+<p>For more information please refer to <a href="/docs/manual/programmability/#read-only_scripts">Read-only scripts</a></p>
+</li>
+<li>
+<p><code>allow-oom</code>: use this flag to allow a script to execute when the server is out of memory (OOM).</p>
+<p>Unless used, Redis will deny the execution of flagged scripts (Functions and Eval scripts with <a href="/topics/eval-intro#eval-flags">shebang</a>) when in an OOM state.
+Furthermore, when you use this flag, the script can call any Redis command, including commands that aren't usually allowed in this state.
+Specifying <code>no-writes</code> or using <code>FCALL_RO</code> / <code>EVAL_RO</code> also implies the script can run in OOM state (without specifying <code>allow-oom</code>)</p>
+</li>
+<li>
+<p><code>allow-stale</code>: a flag that enables running the flagged scripts (Functions and Eval scripts with <a href="/topics/eval-intro#eval-flags">shebang</a>) against a stale replica when the <code>replica-serve-stale-data</code> config is set to <code>no</code> .</p>
+<p>Redis can be set to prevent data consistency problems from using old data by having stale replicas return a runtime error.
+For scripts that do not access the data, this flag can be set to allow stale Redis replicas to run the script.
+Note however that the script will still be unable to execute any command that accesses stale data.</p>
+</li>
+<li>
+<p><code>no-cluster</code>: the flag causes the script to return an error in Redis cluster mode.</p>
+<p>Redis allows scripts to be executed both in standalone and cluster modes.
+Setting this flag prevents executing the script against nodes in the cluster.</p>
+</li>
+<li>
+<p><code>allow-cross-slot-keys</code>: The flag that allows a script to access keys from multiple slots.</p>
+<p>Redis typically prevents any single command from accessing keys that hash to multiple slots.
+This flag allows scripts to break this rule and access keys within the script that access multiple slots.
+Declared keys to the script are still always required to hash to a single slot.
+Accessing keys from multiple slots is discouraged as applications should be designed to only access keys from a single slot at a time, allowing slots to move between Redis servers.</p>
+<p>This flag has no effect when cluster mode is disabled.</p>
+</li>
+</ul>
+<p>Please refer to <a href="/docs/manual/programmability/functions-intro/#function-flags">Function Flags</a> and <a href="/docs/manual/programmability/eval-intro/#eval-flags">Eval Flags</a> for a detailed example.</p>
+<h3 id="redisredis_version"><a name="redis.redis_version"></a> <code>redis.REDIS_VERSION</code><a class="headerlink" href="#redisredis_version" title="Permanent link">⚓︎</a></h3>
+<ul>
+<li>Since version: 7.0.0</li>
+<li>Available in scripts: yes</li>
+<li>Available in functions: yes</li>
+</ul>
+<p>Returns the current Redis server version as a Lua string.
+The reply's format is <code>MM.mm.PP</code>, where:</p>
+<ul>
+<li><strong>MM:</strong> is the major version.</li>
+<li><strong>mm:</strong> is the minor version.</li>
+<li><strong>PP:</strong> is the patch level.</li>
+</ul>
+<h3 id="redisredis_version_num"><a name="redis.redis_version_num"></a> <code>redis.REDIS_VERSION_NUM</code><a class="headerlink" href="#redisredis_version_num" title="Permanent link">⚓︎</a></h3>
+<ul>
+<li>Since version: 7.0.0</li>
+<li>Available in scripts: yes</li>
+<li>Available in functions: yes</li>
+</ul>
+<p>Returns the current Redis server version as a number.
+The reply is a hexadecimal value structured as <code>0x00MMmmPP</code>, where:</p>
+<ul>
+<li><strong>MM:</strong> is the major version.</li>
+<li><strong>mm:</strong> is the minor version.</li>
+<li><strong>PP:</strong> is the patch level.</li>
+</ul>
+<h2 id="data-type-conversion">Data type conversion<a class="headerlink" href="#data-type-conversion" title="Permanent link">⚓︎</a></h2>
+<p>Unless a runtime exception is raised, <code>redis.call()</code> and <code>redis.pcall()</code> return the reply from the executed command to the Lua script.
+Redis' replies from these functions are converted automatically into Lua's native data types.</p>
+<p>Similarly, when a Lua script returns a reply with the <code>return</code> keyword,
+that reply is automatically converted to Redis' protocol.</p>
+<p>Put differently; there's a one-to-one mapping between Redis' replies and Lua's data types and a one-to-one mapping between Lua's data types and the <a href="/topics/protocol">Redis Protocol</a> data types.
+The underlying design is such that if a Redis type is converted into a Lua type and converted back into a Redis type, the result is the same as the initial value.</p>
+<p>Type conversion from Redis protocol replies (i.e., the replies from <code>redis.call()</code> and <code>redis.pcall()</code>) to Lua data types depends on the Redis Serialization Protocol version used by the script.
+The default protocol version during script executions is RESP2.
+The script may switch the replies' protocol versions by calling the <code>redis.setresp()</code> function.</p>
+<p>Type conversion from a script's returned Lua data type depends on the user's choice of protocol (see the <code>HELLO</code> command).</p>
+<p>The following sections describe the type conversion rules between Lua and Redis per the protocol's version.</p>
+<h3 id="resp2-to-lua-type-conversion">RESP2 to Lua type conversion<a class="headerlink" href="#resp2-to-lua-type-conversion" title="Permanent link">⚓︎</a></h3>
+<p>The following type conversion rules apply to the execution's context by default as well as after calling <code>redis.setresp(2)</code>:</p>
+<ul>
+<li><a href="/topics/protocol#resp-integers">RESP2 integer reply</a> -&gt; Lua number</li>
+<li><a href="/topics/protocol#resp-bulk-strings">RESP2 bulk string reply</a> -&gt; Lua string</li>
+<li><a href="/topics/protocol#resp-arrays">RESP2 array reply</a> -&gt; Lua table (may have other Redis data types nested)</li>
+<li><a href="/topics/protocol#resp-simple-strings">RESP2 status reply</a> -&gt; Lua table with a single <em>ok</em> field containing the status string</li>
+<li><a href="/topics/protocol#resp-errors">RESP2 error reply</a> -&gt; Lua table with a single <em>err</em> field containing the error string</li>
+<li><a href="/topics/protocol#null-elements-in-arrays">RESP2 null bulk reply</a> and <a href="/topics/protocol#resp-arrays">null multi bulk reply</a> -&gt; Lua false boolean type</li>
+</ul>
+<h2 id="lua-to-resp2-type-conversion">Lua to RESP2 type conversion<a class="headerlink" href="#lua-to-resp2-type-conversion" title="Permanent link">⚓︎</a></h2>
+<p>The following type conversion rules apply by default as well as after the user had called <code>HELLO 2</code>:</p>
+<ul>
+<li>Lua number -&gt; <a href="/topics/protocol#resp-integers">RESP2 integer reply</a> (the number is converted into an integer)</li>
+<li>Lua string -&gt; <a href="/topics/protocol#resp-bulk-strings">RESP bulk string reply</a></li>
+<li>Lua table (indexed, non-associative array) -&gt; <a href="/topics/protocol#resp-arrays">RESP2 array reply</a> (truncated at the first Lua <code>nil</code> value encountered in the table, if any)</li>
+<li>Lua table with a single <em>ok</em> field -&gt; <a href="/topics/protocol#resp-simple-strings">RESP2 status reply</a></li>
+<li>Lua table with a single <em>err</em> field -&gt; <a href="/topics/protocol#resp-errors">RESP2 error reply</a></li>
+<li>Lua boolean false -&gt; <a href="/topics/protocol#null-elements-in-arrays">RESP2 null bulk reply</a></li>
+</ul>
+<p>There is an additional Lua-to-Redis conversion rule that has no corresponding Redis-to-Lua conversion rule:</p>
+<ul>
+<li>Lua Boolean <code>true</code> -&gt; <a href="/topics/protocol#resp-integers">RESP2 integer reply</a> with value of 1.</li>
+</ul>
+<p>There are three additional rules to note about converting Lua to Redis data types:</p>
+<ul>
+<li>Lua has a single numerical type, Lua numbers. 
+  There is no distinction between integers and floats.
+  So we always convert Lua numbers into integer replies, removing the decimal part of the number, if any.
+  <strong>If you want to return a Lua float, it should be returned as a string</strong>,
+  exactly like Redis itself does (see, for instance, the <code>ZSCORE</code> command).</li>
+<li>There's <a href="http://www.lua.org/pil/19.1.html">no simple way to have nils inside Lua arrays</a> due 
+  to Lua's table semantics.
+  Therefore, when Redis converts a Lua array to RESP, the conversion stops when it encounters a Lua <code>nil</code> value.</li>
+<li>When a Lua table is an associative array that contains keys and their respective values, the converted Redis reply will <strong>not</strong> include them.</li>
+</ul>
+<p>Lua to RESP2 type conversion examples:</p>
+<div class="highlight"><pre><span></span><code>redis&gt; EVAL &quot;return 10&quot; 0
+(integer) 10
+
+redis&gt; EVAL &quot;return { 1, 2, { 3, &#39;Hello World!&#39; } }&quot; 0
+1) (integer) 1
+2) (integer) 2
+3) 1) (integer) 3
+   1) &quot;Hello World!&quot;
+
+redis&gt; EVAL &quot;return redis.call(&#39;get&#39;,&#39;foo&#39;)&quot; 0
+&quot;bar&quot;
+</code></pre></div>
+<p>The last example demonstrates receiving and returning the exact return value of <code>redis.call()</code> (or <code>redis.pcall()</code>) in Lua as it would be returned if the command had been called directly.</p>
+<p>The following example shows how floats and arrays that cont nils and keys are handled:</p>
+<div class="highlight"><pre><span></span><code>redis&gt; EVAL &quot;return { 1, 2, 3.3333, somekey = &#39;somevalue&#39;, &#39;foo&#39;, nil , &#39;bar&#39; }&quot; 0
+1) (integer) 1
+2) (integer) 2
+3) (integer) 3
+4) &quot;foo&quot;
+</code></pre></div>
+<p>As you can see, the float value of <em>3.333</em> gets converted to an integer <em>3</em>, the <em>somekey</em> key and its value are omitted, and the string "bar" isn't returned as there is a <code>nil</code> value that precedes it.</p>
+<h3 id="resp3-to-lua-type-conversion">RESP3 to Lua type conversion<a class="headerlink" href="#resp3-to-lua-type-conversion" title="Permanent link">⚓︎</a></h3>
+<p><a href="https://github.com/redis/redis-specifications/blob/master/protocol/RESP3.md">RESP3</a> is a newer version of the <a href="/topics/protocol">Redis Serialization Protocol</a>.
+It is available as an opt-in choice as of Redis v6.0.</p>
+<p>An executing script may call the <a href="#redis.setresp"><code>redis.setresp</code></a> function during its execution and switch the protocol version that's used for returning replies from Redis' commands (that can be invoked via <a href="#redis.call"><code>redis.call()</code></a> or <a href="#redis.pcall"><code>redis.pcall()</code></a>).</p>
+<p>Once Redis' replies are in RESP3 protocol, all of the <a href="#resp2-to-lua-type-conversion">RESP2 to Lua conversion</a> rules apply, with the following additions:</p>
+<ul>
+<li><a href="https://github.com/redis/redis-specifications/blob/master/protocol/RESP3.md#map-type">RESP3 map reply</a> -&gt; Lua table with a single <em>map</em> field containing a Lua table representing the fields and values of the map.</li>
+<li><a href="https://github.com/redis/redis-specifications/blob/master/protocol/RESP3.md#set-reply">RESP set reply</a> -&gt; Lua table with a single <em>set</em> field containing a Lua table representing the elements of the set as fields, each with the Lua Boolean value of <code>true</code>.</li>
+<li><a href="https://github.com/redis/redis-specifications/blob/master/protocol/RESP3.md#null-reply">RESP3 null</a> -&gt; Lua <code>nil</code>.</li>
+<li><a href="https://github.com/redis/redis-specifications/blob/master/protocol/RESP3.md#boolean-reply">RESP3 true reply</a> -&gt; Lua true boolean value.</li>
+<li><a href="https://github.com/redis/redis-specifications/blob/master/protocol/RESP3.md#boolean-reply">RESP3 false reply</a> -&gt; Lua false boolean value.</li>
+<li><a href="https://github.com/redis/redis-specifications/blob/master/protocol/RESP3.md#double-type">RESP3 double reply</a> -&gt; Lua table with a single <em>double</em> field containing a Lua number representing the double value.</li>
+<li><a href="https://github.com/redis/redis-specifications/blob/master/protocol/RESP3.md#big-number-type">RESP3 big number reply</a> -&gt; Lua table with a single <em>big_number</em> field containing a Lua string representing the big number value.</li>
+<li><a href="https://github.com/redis/redis-specifications/blob/master/protocol/RESP3.md#verbatim-string-type">Redis verbatim string reply</a> -&gt; Lua table with a single <em>verbatim_string</em> field containing a Lua table with two fields, <em>string</em> and <em>format</em>, representing the verbatim string and its format, respectively.</li>
+</ul>
+<p><strong>Note:</strong>
+the RESP3 <a href="https://github.com/redis/redis-specifications/blob/master/protocol/RESP3.md#big-number-type">big number</a> and <a href="https://github.com/redis/redis-specifications/blob/master/protocol/RESP3.md#verbatim-string-type">verbatim strings</a> replies are only supported as of Redis v7.0 and greater. 
+Also, presently, RESP3's <a href="https://github.com/redis/redis-specifications/blob/master/protocol/RESP3.md#attribute-type">attributes</a>, <a href="https://github.com/redis/redis-specifications/blob/master/protocol/RESP3.md#streamed-strings">streamed strings</a> and <a href="https://github.com/redis/redis-specifications/blob/master/protocol/RESP3.md#streamed-aggregate-data-types">streamed aggregate data types</a> are not supported by the Redis Lua API.</p>
+<h3 id="lua-to-resp3-type-conversion">Lua to RESP3 type conversion<a class="headerlink" href="#lua-to-resp3-type-conversion" title="Permanent link">⚓︎</a></h3>
+<p>Regardless of the script's choice of protocol version set for replies with the [<code>redis.setresp()</code> function] when it calls <code>redis.call()</code> or <code>redis.pcall()</code>, the user may opt-in to using RESP3 (with the <code>HELLO 3</code> command) for the connection.
+Although the default protocol for incoming client connections is RESP2, the script should honor the user's preference and return adequately-typed RESP3 replies, so the following rules apply on top of those specified in the <a href="#lua-to-resp2-type-conversion">Lua to RESP2 type conversion</a> section when that is the case.</p>
+<ul>
+<li>Lua Boolean -&gt; <a href="https://github.com/redis/redis-specifications/blob/master/protocol/RESP3.md#boolean-reply">RESP3 Boolean reply</a> (note that this is a change compared to the RESP2, in which returning a Boolean Lua <code>true</code> returned the number 1 to the Redis client, and returning a <code>false</code> used to return a <code>null</code>.</li>
+<li>Lua table with a single <em>map</em> field set to an associative Lua table -&gt; <a href="https://github.com/redis/redis-specifications/blob/master/protocol/RESP3.md#map-type">RESP3 map reply</a>.</li>
+<li>Lua table with a single <em>set</em> field set to an associative Lua table -&gt; <a href="https://github.com/redis/redis-specifications/blob/master/protocol/RESP3.md#set-type">RESP3 set reply</a>. Values can be set to anything and are discarded anyway.</li>
+<li>Lua table with a single <em>double</em> field to an associative Lua table -&gt; <a href="https://github.com/redis/redis-specifications/blob/master/protocol/RESP3.md#double-type">RESP3 double reply</a>.</li>
+<li>Lua nil -&gt; <a href="https://github.com/redis/redis-specifications/blob/master/protocol/RESP3.md#null-reply">RESP3 null</a>.</li>
+</ul>
+<p>However, if the connection is set use the RESP2 protocol, and even if the script replies with RESP3-typed responses, Redis will automatically perform a RESP3 to RESP2 conversion of the reply as is the case for regular commands.
+That means, for example, that returning the RESP3 map type to a RESP2 connection will result in the reply being converted to a flat RESP2 array that consists of alternating field names and their values, rather than a RESP3 map.</p>
+<h2 id="additional-notes-about-scripting">Additional notes about scripting<a class="headerlink" href="#additional-notes-about-scripting" title="Permanent link">⚓︎</a></h2>
+<h3 id="using-select-inside-scripts">Using <code>SELECT</code> inside scripts<a class="headerlink" href="#using-select-inside-scripts" title="Permanent link">⚓︎</a></h3>
+<p>You can call the <code>SELECT</code> command from your Lua scripts, like you can with any normal client connection.
+However, one subtle aspect of the behavior changed between Redis versions 2.8.11 and 2.8.12.
+Prior to Redis version 2.8.12, the database selected by the Lua script was <em>set as the current database</em> for the client connection that had called it.
+As of Redis version 2.8.12, the database selected by the Lua script only affects the execution context of the script, and does not modify the database that's selected by the client calling the script.
+This semantic change between patch level releases was required since the old behavior was inherently incompatible with Redis' replication and introduced bugs.</p>
+<h2 id="runtime-libraries">Runtime libraries<a class="headerlink" href="#runtime-libraries" title="Permanent link">⚓︎</a></h2>
+<p>The Redis Lua runtime context always comes with several pre-imported libraries.</p>
+<p>The following <a href="https://www.lua.org/manual/5.1/manual.html#5">standard Lua libraries</a> are available to use:</p>
+<ul>
+<li>The <a href="https://www.lua.org/manual/5.1/manual.html#5.4"><em>String Manipulation (string)</em> library</a></li>
+<li>The <a href="https://www.lua.org/manual/5.1/manual.html#5.5"><em>Table Manipulation (table)</em> library</a></li>
+<li>The <a href="https://www.lua.org/manual/5.1/manual.html#5.6"><em>Mathematical Functions (math)</em> library</a></li>
+</ul>
+<p>In addition, the following external libraries are loaded and accessible to scripts:</p>
+<ul>
+<li>The <a href="#struct-library"><em>struct</em> library</a></li>
+<li>The <a href="#cjson-library"><em>cjson</em> library</a></li>
+<li>The <a href="#cmsgpack-library"><em>cmsgpack</em> library</a></li>
+<li>The <a href="#bitop-library"><em>bitop</em> library</a></li>
+</ul>
+<h3 id="struct-library"><a name="struct-library"></a> <em>struct</em> library<a class="headerlink" href="#struct-library" title="Permanent link">⚓︎</a></h3>
+<ul>
+<li>Since version: 2.6.0</li>
+<li>Available in scripts: yes</li>
+<li>Available in functions: yes</li>
+</ul>
+<p><em>struct</em> is a library for packing and unpacking C-like structures in Lua.
+It provides the following functions:</p>
+<ul>
+<li><a href="#struct.pack"><code>struct.pack()</code></a></li>
+<li><a href="#struct.unpack"><code>struct.unpack()</code></a></li>
+<li><a href="#struct.size"><code>struct.size()</code></a></li>
+</ul>
+<p>All of <em>struct</em>'s functions expect their first argument to be a <a href="#struct-formats">format string</a>.</p>
+<h4 id="struct-formats"><a name="struct-formats"></a> <em>struct</em> formats<a class="headerlink" href="#struct-formats" title="Permanent link">⚓︎</a></h4>
+<p>The following are valid format strings for <em>struct</em>'s functions:</p>
+<ul>
+<li><code>&gt;</code>: big endian</li>
+<li><code>&lt;</code>: little endian</li>
+<li><code>![num]</code>: alignment</li>
+<li><code>x</code>: padding</li>
+<li><code>b/B</code>: signed/unsigned byte</li>
+<li><code>h/H</code>: signed/unsigned short</li>
+<li><code>l/L</code>: signed/unsigned long</li>
+<li><code>T</code>: size_t</li>
+<li><code>i/In</code>: signed/unsigned integer with size <em>n</em> (defaults to the size of int)</li>
+<li><code>cn</code>: sequence of <em>n</em> chars (from/to a string); when packing, n == 0 means the
+  whole string; when unpacking, n == 0 means use the previously read number as
+  the string's length.</li>
+<li><code>s</code>: zero-terminated string</li>
+<li><code>f</code>: float</li>
+<li><code>d</code>: double</li>
+<li><code></code> (space): ignored</li>
+</ul>
+<h4 id="structpackx"><a name="struct.pack"></a> <code>struct.pack(x)</code><a class="headerlink" href="#structpackx" title="Permanent link">⚓︎</a></h4>
+<p>This function returns a struct-encoded string from values.
+It accepts a <a href="#struct-formats"><em>struct</em> format string</a> as its first argument, followed by the values that are to be encoded.</p>
+<p>Usage example:</p>
+<div class="highlight"><pre><span></span><code>redis&gt; EVAL &quot;return struct.pack(&#39;HH&#39;, 1, 2)&quot; 0
+&quot;\x01\x00\x02\x00&quot;
+</code></pre></div>
+<h4 id="structunpackx"><a name="struct.unpack"></a> <code>struct.unpack(x)</code><a class="headerlink" href="#structunpackx" title="Permanent link">⚓︎</a></h4>
+<p>This function returns the decoded values from a struct.
+It accepts a <a href="#struct-formats"><em>struct</em> format string</a> as its first argument, followed by encoded struct's string.</p>
+<p>Usage example:</p>
+<div class="highlight"><pre><span></span><code>redis&gt; EVAL &quot;return { struct.unpack(&#39;HH&#39;, ARGV[1]) }&quot; 0 &quot;\x01\x00\x02\x00&quot;
+1) (integer) 1
+2) (integer) 2
+3) (integer) 5
+</code></pre></div>
+<h4 id="structsizex"><a name="struct.size"></a> <code>struct.size(x)</code><a class="headerlink" href="#structsizex" title="Permanent link">⚓︎</a></h4>
+<p>This function returns the size, in bytes, of a struct.
+It accepts a <a href="#struct-formats"><em>struct</em> format string</a> as its only argument.</p>
+<p>Usage example:</p>
+<div class="highlight"><pre><span></span><code>redis&gt; EVAL &quot;return struct.size(&#39;HH&#39;)&quot; 0
+(integer) 4
+</code></pre></div>
+<h3 id="cjson-library"><a name="cjson-library"></a> <em>cjson</em> library<a class="headerlink" href="#cjson-library" title="Permanent link">⚓︎</a></h3>
+<ul>
+<li>Since version: 2.6.0</li>
+<li>Available in scripts: yes</li>
+<li>Available in functions: yes</li>
+</ul>
+<p>The <em>cjson</em> library provides fast <a href="https://json.org">JSON</a> encoding and decoding from Lua.
+It provides these functions.</p>
+<h4 id="cjsonencodex"><a name="cjson.encode()"></a> <code>cjson.encode(x)</code><a class="headerlink" href="#cjsonencodex" title="Permanent link">⚓︎</a></h4>
+<p>This function returns a JSON-encoded string for the Lua data type provided as its argument.</p>
+<p>Usage example:</p>
+<div class="highlight"><pre><span></span><code>redis&gt; EVAL &quot;return cjson.encode({ [&#39;foo&#39;] = &#39;bar&#39; })&quot; 0
+&quot;{\&quot;foo\&quot;:\&quot;bar\&quot;}&quot;
+</code></pre></div>
+<h4 id="cjsondecodex"><a name="cjson.decode()"></a> <code>cjson.decode(x)</code><a class="headerlink" href="#cjsondecodex" title="Permanent link">⚓︎</a></h4>
+<p>This function returns a Lua data type from the JSON-encoded string provided as its argument.</p>
+<p>Usage example:</p>
+<div class="highlight"><pre><span></span><code>redis&gt; EVAL &quot;return cjson.decode(ARGV[1])[&#39;foo&#39;]&quot; 0 &#39;{&quot;foo&quot;:&quot;bar&quot;}&#39;
+&quot;bar&quot;
+</code></pre></div>
+<h3 id="cmsgpack-library"><a name="cmsgpack-library"></a> <em>cmsgpack</em> library<a class="headerlink" href="#cmsgpack-library" title="Permanent link">⚓︎</a></h3>
+<ul>
+<li>Since version: 2.6.0</li>
+<li>Available in scripts: yes</li>
+<li>Available in functions: yes</li>
+</ul>
+<p>The <em>cmsgpack</em> library provides fast <a href="https://msgpack.org/index.html">MessagePack</a> encoding and decoding from Lua.
+It provides these functions.</p>
+<h4 id="cmsgpackpackx"><a name="cmsgpack.pack()"></a> <code>cmsgpack.pack(x)</code><a class="headerlink" href="#cmsgpackpackx" title="Permanent link">⚓︎</a></h4>
+<p>This function returns the packed string encoding of the Lua data type it is given as an argument.</p>
+<p>Usage example:</p>
+<div class="highlight"><pre><span></span><code>redis&gt; EVAL &quot;return cmsgpack.pack({&#39;foo&#39;, &#39;bar&#39;, &#39;baz&#39;})&quot; 0
+&quot;\x93\xa3foo\xa3bar\xa3baz&quot;
+</code></pre></div>
+<h4 id="cmsgpackunpackx"><a name="cmsgpack.unpack()"></a> <code>cmsgpack.unpack(x)</code><a class="headerlink" href="#cmsgpackunpackx" title="Permanent link">⚓︎</a></h4>
+<p>This function returns the unpacked values from decoding its input string argument.</p>
+<p>Usage example:</p>
+<div class="highlight"><pre><span></span><code>redis&gt; EVAL &quot;return cmsgpack.unpack(ARGV[1])&quot; 0 &quot;\x93\xa3foo\xa3bar\xa3baz&quot;
+1) &quot;foo&quot;
+2) &quot;bar&quot;
+3) &quot;baz&quot;
+</code></pre></div>
+<h3 id="bit-library"><a name="bitop-library"></a> <em>bit</em> library<a class="headerlink" href="#bit-library" title="Permanent link">⚓︎</a></h3>
+<ul>
+<li>Since version: 2.8.18</li>
+<li>Available in scripts: yes</li>
+<li>Available in functions: yes</li>
+</ul>
+<p>The <em>bit</em> library provides bitwise operations on numbers.
+Its documentation resides at <a href="http://bitop.luajit.org/api.html">Lua BitOp documentation</a>
+It provides the following functions.</p>
+<h4 id="bittobitx"><a name="bit.tobit()"></a> <code>bit.tobit(x)</code><a class="headerlink" href="#bittobitx" title="Permanent link">⚓︎</a></h4>
+<p>Normalizes a number to the numeric range for bit operations and returns it.</p>
+<p>Usage example:</p>
+<div class="highlight"><pre><span></span><code>redis&gt; EVAL &#39;return bit.tobit(1)&#39; 0
+(integer) 1
+</code></pre></div>
+<h4 id="bittohexx-n"><a name="bit.tohex()"></a> <code>bit.tohex(x [,n])</code><a class="headerlink" href="#bittohexx-n" title="Permanent link">⚓︎</a></h4>
+<p>Converts its first argument to a hex string. The number of hex digits is given by the absolute value of the optional second argument.</p>
+<p>Usage example:</p>
+<div class="highlight"><pre><span></span><code>redis&gt; EVAL &#39;return bit.tohex(422342)&#39; 0
+&quot;000671c6&quot;
+</code></pre></div>
+<h4 id="bitbnotx"><a name="bit.bnot()"></a> <code>bit.bnot(x)</code><a class="headerlink" href="#bitbnotx" title="Permanent link">⚓︎</a></h4>
+<p>Returns the bitwise <strong>not</strong> of its argument.</p>
+<h4 id="bitbnotx-bitborx1-x2-bitbandx1-x2-and-bitbxorx1-x2"><a name="bit.ops"></a> <code>bit.bnot(x)</code> <code>bit.bor(x1 [,x2...])</code>, <code>bit.band(x1 [,x2...])</code> and <code>bit.bxor(x1 [,x2...])</code><a class="headerlink" href="#bitbnotx-bitborx1-x2-bitbandx1-x2-and-bitbxorx1-x2" title="Permanent link">⚓︎</a></h4>
+<p>Returns either the bitwise <strong>or</strong>, bitwise <strong>and</strong>, or bitwise <strong>xor</strong> of all of its arguments.
+Note that more than two arguments are allowed.</p>
+<p>Usage example:</p>
+<div class="highlight"><pre><span></span><code>redis&gt; EVAL &#39;return bit.bor(1,2,4,8,16,32,64,128)&#39; 0
+(integer) 255
+</code></pre></div>
+<h4 id="bitlshiftx-n-bitrshiftx-n-and-bitarshiftx-n"><a name="bit.shifts"></a> <code>bit.lshift(x, n)</code>, <code>bit.rshift(x, n)</code> and <code>bit.arshift(x, n)</code><a class="headerlink" href="#bitlshiftx-n-bitrshiftx-n-and-bitarshiftx-n" title="Permanent link">⚓︎</a></h4>
+<p>Returns either the bitwise logical <strong>left-shift</strong>, bitwise logical <strong>right-shift</strong>, or bitwise <strong>arithmetic right-shift</strong> of its first argument by the number of bits given by the second argument.</p>
+<h4 id="bitrolx-n-and-bitrorx-n"><a name="bit.ro"></a> <code>bit.rol(x, n)</code> and <code>bit.ror(x, n)</code><a class="headerlink" href="#bitrolx-n-and-bitrorx-n" title="Permanent link">⚓︎</a></h4>
+<p>Returns either the bitwise <strong>left rotation</strong>, or bitwise <strong>right rotation</strong> of its first argument by the number of bits given by the second argument.
+Bits shifted out on one side are shifted back in on the other side.</p>
+<h4 id="bitbswapx"><a name="bit.bswap()"></a> <code>bit.bswap(x)</code><a class="headerlink" href="#bitbswapx" title="Permanent link">⚓︎</a></h4>
+<p>Swaps the bytes of its argument and returns it.
+This can be used to convert little-endian 32-bit numbers to big-endian 32-bit numbers and vice versa.</p>
+
+  <hr>
+<div class="md-source-file">
+  <small>
+    
+      最后更新:
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 25, 2023</span>
+      
+        <br>
+        创建日期:
+        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 25, 2023</span>
+      
+    
+  </small>
+</div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../functions-intro/" class="md-footer__link md-footer__link--prev" aria-label="上一页: Redis functions">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                Redis functions
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../lua-debugging/" class="md-footer__link md-footer__link--next" aria-label="下一页: Debugging Lua scripts in Redis">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                Debugging Lua scripts in Redis
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2023 Ean Yang
+    </div>
+  
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/YQisme" target="_blank" rel="noopener" title="github主页" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://space.bilibili.com/244185393?spm_id_from=333.788.0.0" target="_blank" rel="noopener" title="b站主页" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M488.6 104.1c16.7 18.1 24.4 39.7 23.3 65.7v202.4c-.4 26.4-9.2 48.1-26.5 65.1-17.2 17-39.1 25.9-65.5 26.7H92.02c-26.45-.8-48.21-9.8-65.28-27.2C9.682 419.4.767 396.5 0 368.2V169.8c.767-26 9.682-47.6 26.74-65.7C43.81 87.75 65.57 78.77 92.02 78h29.38L96.05 52.19c-5.75-5.73-8.63-13-8.63-21.79 0-8.8 2.88-16.06 8.63-21.797C101.8 2.868 109.1 0 117.9 0s16.1 2.868 21.9 8.603L213.1 78h88l74.5-69.397C381.7 2.868 389.2 0 398 0c8.8 0 16.1 2.868 21.9 8.603 5.7 5.737 8.6 12.997 8.6 21.797 0 8.79-2.9 16.06-8.6 21.79L394.6 78h29.3c26.4.77 48 9.75 64.7 26.1zm-38.8 69.7c-.4-9.6-3.7-17.4-10.7-23.5-5.2-6.1-14-9.4-22.7-9.8H96.05c-9.59.4-17.45 3.7-23.58 9.8-6.14 6.1-9.4 13.9-9.78 23.5v194.4c0 9.2 3.26 17 9.78 23.5s14.38 9.8 23.58 9.8H416.4c9.2 0 17-3.3 23.3-9.8 6.3-6.5 9.7-14.3 10.1-23.5V173.8zm-264.3 42.7c6.3 6.3 9.7 14.1 10.1 23.2V273c-.4 9.2-3.7 16.9-9.8 23.2-6.2 6.3-14 9.5-23.6 9.5-9.6 0-17.5-3.2-23.6-9.5-6.1-6.3-9.4-14-9.8-23.2v-33.3c.4-9.1 3.8-16.9 10.1-23.2 6.3-6.3 13.2-9.6 23.3-10 9.2.4 17 3.7 23.3 10zm191.5 0c6.3 6.3 9.7 14.1 10.1 23.2V273c-.4 9.2-3.7 16.9-9.8 23.2-6.1 6.3-14 9.5-23.6 9.5-9.6 0-17.4-3.2-23.6-9.5-7-6.3-9.4-14-9.7-23.2v-33.3c.3-9.1 3.7-16.9 10-23.2 6.3-6.3 14.1-9.6 23.3-10 9.2.4 17 3.7 23.3 10z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://eanyang7.com" target="_blank" rel="noopener" title="个人主页" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M112 48a48 48 0 1 1 96 0 48 48 0 1 1-96 0zm40 304v128c0 17.7-14.3 32-32 32s-32-14.3-32-32V256.9l-28.6 47.6c-9.1 15.1-28.8 20-43.9 10.9s-20-28.8-10.9-43.9l58.3-97c17.4-28.9 48.6-46.6 82.3-46.6h29.7c33.7 0 64.9 17.7 82.3 46.6l58.3 97c9.1 15.1 4.2 34.8-10.9 43.9s-34.8 4.2-43.9-10.9L232 256.9V480c0 17.7-14.3 32-32 32s-32-14.3-32-32V352h-16z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.tracking", "navigation.prune", "navigation.top", "toc.follow", "header.autohide", "navigation.footer", "search.suggest", "search.highlight", "search.share", "content.action.edit", "content.action.view", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.6c14ae12.min.js"></script>
+      
+    
+  </body>
+</html>

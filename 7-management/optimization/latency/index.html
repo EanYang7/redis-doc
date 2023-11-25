@@ -1,0 +1,2041 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Finding the causes of slow responses">
+      
+      
+        <meta name="author" content="Ean Yang">
+      
+      
+        <link rel="canonical" href="https://eanyang7.github.io/redis-doc/7-management/optimization/latency/">
+      
+      
+        <link rel="prev" href="../latency-monitor/">
+      
+      
+        <link rel="next" href="../memory-optimization/">
+      
+      
+      <link rel="icon" href="../../../assets/favicon.jpg">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.12">
+    
+    
+      
+        <title>Diagnosing latency issues - redis 文档</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.fad675c6.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.356b1318.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="red" data-md-color-accent="deep-purple">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#ive-little-time-give-me-the-checklist" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="redis 文档" class="md-header__button md-logo" aria-label="redis 文档" data-md-component="logo">
+      
+  <img src="../../../assets/logo.jpg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            redis 文档
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Diagnosing latency issues
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="red" data-md-color-accent="deep-purple"  aria-label="切换为暗黑模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换为暗黑模式" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5c-.84 0-1.65.15-2.39.42L12 2M3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29L3.34 7m.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14L3.36 17M20.65 7l-1.77 3.79a7.023 7.023 0 0 0-2.38-4.15l4.15.36m-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29L20.64 17M12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44L12 22Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="red"  aria-label="切换为浅色模式"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="切换为浅色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3 3.19.09m3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95 2.06.05m-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7 0-.24-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91 1.61 0 2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08Z"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/EanYang7/redis-doc" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M186.1 328.7c0 20.9-10.9 55.1-36.7 55.1s-36.7-34.2-36.7-55.1 10.9-55.1 36.7-55.1 36.7 34.2 36.7 55.1zM480 278.2c0 31.9-3.2 65.7-17.5 95-37.9 76.6-142.1 74.8-216.7 74.8-75.8 0-186.2 2.7-225.6-74.8-14.6-29-20.2-63.1-20.2-95 0-41.9 13.9-81.5 41.5-113.6-5.2-15.8-7.7-32.4-7.7-48.8 0-21.5 4.9-32.3 14.6-51.8 45.3 0 74.3 9 108.8 36 29-6.9 58.8-10 88.7-10 27 0 54.2 2.9 80.4 9.2 34-26.7 63-35.2 107.8-35.2 9.8 19.5 14.6 30.3 14.6 51.8 0 16.4-2.6 32.7-7.7 48.2 27.5 32.4 39 72.3 39 114.2zm-64.3 50.5c0-43.9-26.7-82.6-73.5-82.6-18.9 0-37 3.4-56 6-14.9 2.3-29.8 3.2-45.1 3.2-15.2 0-30.1-.9-45.1-3.2-18.7-2.6-37-6-56-6-46.8 0-73.5 38.7-73.5 82.6 0 87.8 80.4 101.3 150.4 101.3h48.2c70.3 0 150.6-13.4 150.6-101.3zm-82.6-55.1c-25.8 0-36.7 34.2-36.7 55.1s10.9 55.1 36.7 55.1 36.7-34.2 36.7-55.1-10.9-55.1-36.7-55.1z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    github仓库
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="redis 文档" class="md-nav__button md-logo" aria-label="redis 文档" data-md-component="logo">
+      
+  <img src="../../../assets/logo.jpg" alt="logo">
+
+    </a>
+    redis 文档
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/EanYang7/redis-doc" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M186.1 328.7c0 20.9-10.9 55.1-36.7 55.1s-36.7-34.2-36.7-55.1 10.9-55.1 36.7-55.1 36.7 34.2 36.7 55.1zM480 278.2c0 31.9-3.2 65.7-17.5 95-37.9 76.6-142.1 74.8-216.7 74.8-75.8 0-186.2 2.7-225.6-74.8-14.6-29-20.2-63.1-20.2-95 0-41.9 13.9-81.5 41.5-113.6-5.2-15.8-7.7-32.4-7.7-48.8 0-21.5 4.9-32.3 14.6-51.8 45.3 0 74.3 9 108.8 36 29-6.9 58.8-10 88.7-10 27 0 54.2 2.9 80.4 9.2 34-26.7 63-35.2 107.8-35.2 9.8 19.5 14.6 30.3 14.6 51.8 0 16.4-2.6 32.7-7.7 48.2 27.5 32.4 39 72.3 39 114.2zm-64.3 50.5c0-43.9-26.7-82.6-73.5-82.6-18.9 0-37 3.4-56 6-14.9 2.3-29.8 3.2-45.1 3.2-15.2 0-30.1-.9-45.1-3.2-18.7-2.6-37-6-56-6-46.8 0-73.5 38.7-73.5 82.6 0 87.8 80.4 101.3 150.4 101.3h48.2c70.3 0 150.6-13.4 150.6-101.3zm-82.6-55.1c-25.8 0-36.7 34.2-36.7 55.1s10.9 55.1 36.7 55.1 36.7-34.2 36.7-55.1-10.9-55.1-36.7-55.1z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    github仓库
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Documentation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../0-about/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    0 about
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../1-get-started/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    1 get started
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../2-install/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    2 install
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../3-connect/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    3 connect
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../4-data-types/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    4 data types
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../5-interact/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    5 interact
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../6-manual/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    6 manual
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    7 management
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            7 management
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../_index/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Manage Redis
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../admin/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis administration
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../config-file/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis configuration file example
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../config/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis configuration
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../debugging/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Debugging
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../persistence/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis persistence
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../replication/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis replication
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../scaling/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Scale with Redis Cluster
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sentinel/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    High availability with Redis Sentinel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../troubleshooting/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Troubleshooting Redis
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9_11" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_9_11" id="__nav_9_11_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Optimization
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_9_11_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_9_11">
+            <span class="md-nav__icon md-icon"></span>
+            Optimization
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../_index/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Optimizing Redis
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cpu-profiling/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis CPU profiling
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../latency-monitor/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis latency monitoring
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Diagnosing latency issues
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Diagnosing latency issues
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#ive-little-time-give-me-the-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      I've little time, give me the checklist
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#measuring-latency" class="md-nav__link">
+    <span class="md-ellipsis">
+      Measuring latency
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-the-internal-redis-latency-monitoring-subsystem" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using the internal Redis latency monitoring subsystem
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#latency-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      Latency baseline
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#latency-induced-by-network-and-communication" class="md-nav__link">
+    <span class="md-ellipsis">
+      Latency induced by network and communication
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#single-threaded-nature-of-redis" class="md-nav__link">
+    <span class="md-ellipsis">
+      Single threaded nature of Redis
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#latency-generated-by-slow-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      Latency generated by slow commands
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#latency-generated-by-fork" class="md-nav__link">
+    <span class="md-ellipsis">
+      Latency generated by fork
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fork-time-in-different-systems" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fork time in different systems
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#latency-induced-by-transparent-huge-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      Latency induced by transparent huge pages
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#latency-induced-by-swapping-operating-system-paging" class="md-nav__link">
+    <span class="md-ellipsis">
+      Latency induced by swapping (operating system paging)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#latency-due-to-aof-and-disk-io" class="md-nav__link">
+    <span class="md-ellipsis">
+      Latency due to AOF and disk I/O
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#latency-generated-by-expires" class="md-nav__link">
+    <span class="md-ellipsis">
+      Latency generated by expires
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#redis-software-watchdog" class="md-nav__link">
+    <span class="md-ellipsis">
+      Redis software watchdog
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../memory-optimization/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Memory optimization
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../benchmarks/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    Benchmarks
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../security/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    Security
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../8-reference/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    8 reference
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#ive-little-time-give-me-the-checklist" class="md-nav__link">
+    <span class="md-ellipsis">
+      I've little time, give me the checklist
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#measuring-latency" class="md-nav__link">
+    <span class="md-ellipsis">
+      Measuring latency
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-the-internal-redis-latency-monitoring-subsystem" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using the internal Redis latency monitoring subsystem
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#latency-baseline" class="md-nav__link">
+    <span class="md-ellipsis">
+      Latency baseline
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#latency-induced-by-network-and-communication" class="md-nav__link">
+    <span class="md-ellipsis">
+      Latency induced by network and communication
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#single-threaded-nature-of-redis" class="md-nav__link">
+    <span class="md-ellipsis">
+      Single threaded nature of Redis
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#latency-generated-by-slow-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      Latency generated by slow commands
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#latency-generated-by-fork" class="md-nav__link">
+    <span class="md-ellipsis">
+      Latency generated by fork
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fork-time-in-different-systems" class="md-nav__link">
+    <span class="md-ellipsis">
+      Fork time in different systems
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#latency-induced-by-transparent-huge-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      Latency induced by transparent huge pages
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#latency-induced-by-swapping-operating-system-paging" class="md-nav__link">
+    <span class="md-ellipsis">
+      Latency induced by swapping (operating system paging)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#latency-due-to-aof-and-disk-io" class="md-nav__link">
+    <span class="md-ellipsis">
+      Latency due to AOF and disk I/O
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#latency-generated-by-expires" class="md-nav__link">
+    <span class="md-ellipsis">
+      Latency generated by expires
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#redis-software-watchdog" class="md-nav__link">
+    <span class="md-ellipsis">
+      Redis software watchdog
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+    <a href="https://github.com/EanYang7/redis-doc/tree/main/docs/7-management/optimization/latency.md" title="编辑此页" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/EanYang7/redis-doc/tree/main/docs/7-management/optimization/latency.md" title="查看本页的源代码" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0 8a5 5 0 0 1-5-5 5 5 0 0 1 5-5 5 5 0 0 1 5 5 5 5 0 0 1-5 5m0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5Z"/></svg>
+    </a>
+  
+
+
+  <h1>Diagnosing latency issues</h1>
+
+<p>This document will help you understand what the problem could be if you
+are experiencing latency problems with Redis.</p>
+<p>In this context <em>latency</em> is the maximum delay between the time a client
+issues a command and the time the reply to the command is received by the
+client. Usually Redis processing time is extremely low, in the sub microsecond
+range, but there are certain conditions leading to higher latency figures.</p>
+<h2 id="ive-little-time-give-me-the-checklist">I've little time, give me the checklist<a class="headerlink" href="#ive-little-time-give-me-the-checklist" title="Permanent link">⚓︎</a></h2>
+<p>The following documentation is very important in order to run Redis in
+a low latency fashion. However I understand that we are busy people, so
+let's start with a quick checklist. If you fail following these steps, please
+return here to read the full documentation.</p>
+<ol>
+<li>Make sure you are not running slow commands that are blocking the server. Use the Redis <a href="/commands/slowlog">Slow Log feature</a> to check this.</li>
+<li>For EC2 users, make sure you use HVM based modern EC2 instances, like m3.medium. Otherwise fork() is too slow.</li>
+<li>Transparent huge pages must be disabled from your kernel. Use <code>echo never &gt; /sys/kernel/mm/transparent_hugepage/enabled</code> to disable them, and restart your Redis process.</li>
+<li>If you are using a virtual machine, it is possible that you have an intrinsic latency that has nothing to do with Redis. Check the minimum latency you can expect from your runtime environment using <code>./redis-cli --intrinsic-latency 100</code>. Note: you need to run this command in <em>the server</em> not in the client.</li>
+<li>Enable and use the <a href="/topics/latency-monitor">Latency monitor</a> feature of Redis in order to get a human readable description of the latency events and causes in your Redis instance.</li>
+</ol>
+<p>In general, use the following table for durability VS latency/performance tradeoffs, ordered from stronger safety to better latency.</p>
+<ol>
+<li>AOF + fsync always: this is very slow, you should use it only if you know what you are doing.</li>
+<li>AOF + fsync every second: this is a good compromise.</li>
+<li>AOF + fsync every second + no-appendfsync-on-rewrite option set to yes: this is as the above, but avoids to fsync during rewrites to lower the disk pressure.</li>
+<li>AOF + fsync never. Fsyncing is up to the kernel in this setup, even less disk pressure and risk of latency spikes.</li>
+<li>RDB. Here you have a vast spectrum of tradeoffs depending on the save triggers you configure.</li>
+</ol>
+<p>And now for people with 15 minutes to spend, the details...</p>
+<h2 id="measuring-latency">Measuring latency<a class="headerlink" href="#measuring-latency" title="Permanent link">⚓︎</a></h2>
+<p>If you are experiencing latency problems, you probably know how to measure
+it in the context of your application, or maybe your latency problem is very
+evident even macroscopically. However redis-cli can be used to measure the
+latency of a Redis server in milliseconds, just try:</p>
+<div class="highlight"><pre><span></span><code>redis-cli --latency -h `host` -p `port`
+</code></pre></div>
+<h2 id="using-the-internal-redis-latency-monitoring-subsystem">Using the internal Redis latency monitoring subsystem<a class="headerlink" href="#using-the-internal-redis-latency-monitoring-subsystem" title="Permanent link">⚓︎</a></h2>
+<p>Since Redis 2.8.13, Redis provides latency monitoring capabilities that
+are able to sample different execution paths to understand where the
+server is blocking. This makes debugging of the problems illustrated in
+this documentation much simpler, so we suggest enabling latency monitoring
+ASAP. Please refer to the <a href="/topics/latency-monitor">Latency monitor documentation</a>.</p>
+<p>While the latency monitoring sampling and reporting capabilities will make
+it simpler to understand the source of latency in your Redis system, it is still
+advised that you read this documentation extensively to better understand
+the topic of Redis and latency spikes.</p>
+<h2 id="latency-baseline">Latency baseline<a class="headerlink" href="#latency-baseline" title="Permanent link">⚓︎</a></h2>
+<p>There is a kind of latency that is inherently part of the environment where
+you run Redis, that is the latency provided by your operating system kernel
+and, if you are using virtualization, by the hypervisor you are using.</p>
+<p>While this latency can't be removed it is important to study it because
+it is the baseline, or in other words, you won't be able to achieve a Redis
+latency that is better than the latency that every process running in your
+environment will experience because of the kernel or hypervisor implementation
+or setup.</p>
+<p>We call this kind of latency <strong>intrinsic latency</strong>, and <code>redis-cli</code> starting
+from Redis version 2.8.7 is able to measure it. This is an example run
+under Linux 3.11.0 running on an entry level server.</p>
+<p>Note: the argument <code>100</code> is the number of seconds the test will be executed.
+The more time we run the test, the more likely we'll be able to spot
+latency spikes. 100 seconds is usually appropriate, however you may want
+to perform a few runs at different times. Please note that the test is CPU
+intensive and will likely saturate a single core in your system.</p>
+<div class="highlight"><pre><span></span><code>$ ./redis-cli --intrinsic-latency 100
+Max latency so far: 1 microseconds.
+Max latency so far: 16 microseconds.
+Max latency so far: 50 microseconds.
+Max latency so far: 53 microseconds.
+Max latency so far: 83 microseconds.
+Max latency so far: 115 microseconds.
+</code></pre></div>
+<p>Note: redis-cli in this special case needs to <strong>run in the server</strong> where you run or plan to run Redis, not in the client. In this special mode redis-cli does not connect to a Redis server at all: it will just try to measure the largest time the kernel does not provide CPU time to run to the redis-cli process itself.</p>
+<p>In the above example, the intrinsic latency of the system is just 0.115
+milliseconds (or 115 microseconds), which is a good news, however keep in mind
+that the intrinsic latency may change over time depending on the load of the
+system.</p>
+<p>Virtualized environments will not show so good numbers, especially with high
+load or if there are noisy neighbors. The following is a run on a Linode 4096
+instance running Redis and Apache:</p>
+<div class="highlight"><pre><span></span><code>$ ./redis-cli --intrinsic-latency 100
+Max latency so far: 573 microseconds.
+Max latency so far: 695 microseconds.
+Max latency so far: 919 microseconds.
+Max latency so far: 1606 microseconds.
+Max latency so far: 3191 microseconds.
+Max latency so far: 9243 microseconds.
+Max latency so far: 9671 microseconds.
+</code></pre></div>
+<p>Here we have an intrinsic latency of 9.7 milliseconds: this means that we can't ask better than that to Redis. However other runs at different times in different virtualization environments with higher load or with noisy neighbors can easily show even worse values. We were able to measure up to 40 milliseconds in
+systems otherwise apparently running normally.</p>
+<h2 id="latency-induced-by-network-and-communication">Latency induced by network and communication<a class="headerlink" href="#latency-induced-by-network-and-communication" title="Permanent link">⚓︎</a></h2>
+<p>Clients connect to Redis using a TCP/IP connection or a Unix domain connection.
+The typical latency of a 1 Gbit/s network is about 200 us, while the latency
+with a Unix domain socket can be as low as 30 us. It actually depends on your
+network and system hardware. On top of the communication itself, the system
+adds some more latency (due to thread scheduling, CPU caches, NUMA placement,
+etc ...). System induced latencies are significantly higher on a virtualized
+environment than on a physical machine.</p>
+<p>The consequence is even if Redis processes most commands in sub microsecond
+range, a client performing many roundtrips to the server will have to pay
+for these network and system related latencies.</p>
+<p>An efficient client will therefore try to limit the number of roundtrips by
+pipelining several commands together. This is fully supported by the servers
+and most clients. Aggregated commands like MSET/MGET can be also used for
+that purpose. Starting with Redis 2.4, a number of commands also support
+variadic parameters for all data types.</p>
+<p>Here are some guidelines:</p>
+<ul>
+<li>If you can afford it, prefer a physical machine over a VM to host the server.</li>
+<li>Do not systematically connect/disconnect to the server (especially true
+  for web based applications). Keep your connections as long lived as possible.</li>
+<li>If your client is on the same host than the server, use Unix domain sockets.</li>
+<li>Prefer to use aggregated commands (MSET/MGET), or commands with variadic
+  parameters (if possible) over pipelining.</li>
+<li>Prefer to use pipelining (if possible) over sequence of roundtrips.</li>
+<li>Redis supports Lua server-side scripting to cover cases that are not suitable
+  for raw pipelining (for instance when the result of a command is an input for
+  the following commands).</li>
+</ul>
+<p>On Linux, some people can achieve better latencies by playing with process
+placement (taskset), cgroups, real-time priorities (chrt), NUMA
+configuration (numactl), or by using a low-latency kernel. Please note
+vanilla Redis is not really suitable to be bound on a <strong>single</strong> CPU core.
+Redis can fork background tasks that can be extremely CPU consuming
+like <code>BGSAVE</code> or <code>BGREWRITEAOF</code>. These tasks must <strong>never</strong> run on the same core
+as the main event loop.</p>
+<p>In most situations, these kind of system level optimizations are not needed.
+Only do them if you require them, and if you are familiar with them.</p>
+<h2 id="single-threaded-nature-of-redis">Single threaded nature of Redis<a class="headerlink" href="#single-threaded-nature-of-redis" title="Permanent link">⚓︎</a></h2>
+<p>Redis uses a <em>mostly</em> single threaded design. This means that a single process
+serves all the client requests, using a technique called <strong>multiplexing</strong>.
+This means that Redis can serve a single request in every given moment, so
+all the requests are served sequentially. This is very similar to how Node.js
+works as well. However, both products are not often perceived as being slow.
+This is caused in part by the small amount of time to complete a single request,
+but primarily because these products are designed to not block on system calls,
+such as reading data from or writing data to a socket.</p>
+<p>I said that Redis is <em>mostly</em> single threaded since actually from Redis 2.4
+we use threads in Redis in order to perform some slow I/O operations in the
+background, mainly related to disk I/O, but this does not change the fact
+that Redis serves all the requests using a single thread.</p>
+<h2 id="latency-generated-by-slow-commands">Latency generated by slow commands<a class="headerlink" href="#latency-generated-by-slow-commands" title="Permanent link">⚓︎</a></h2>
+<p>A consequence of being single thread is that when a request is slow to serve
+all the other clients will wait for this request to be served. When executing
+normal commands, like <code>GET</code> or <code>SET</code> or <code>LPUSH</code> this is not a problem
+at all since these commands are executed in constant (and very small) time.
+However there are commands operating on many elements, like <code>SORT</code>, <code>LREM</code>,
+<code>SUNION</code> and others. For instance taking the intersection of two big sets
+can take a considerable amount of time.</p>
+<p>The algorithmic complexity of all commands is documented. A good practice
+is to systematically check it when using commands you are not familiar with.</p>
+<p>If you have latency concerns you should either not use slow commands against
+values composed of many elements, or you should run a replica using Redis
+replication where you run all your slow queries.</p>
+<p>It is possible to monitor slow commands using the Redis
+<a href="/commands/slowlog">Slow Log feature</a>.</p>
+<p>Additionally, you can use your favorite per-process monitoring program
+(top, htop, prstat, etc ...) to quickly check the CPU consumption of the
+main Redis process. If it is high while the traffic is not, it is usually
+a sign that slow commands are used.</p>
+<p><strong>IMPORTANT NOTE</strong>: a VERY common source of latency generated by the execution
+of slow commands is the use of the <code>KEYS</code> command in production environments.
+<code>KEYS</code>, as documented in the Redis documentation, should only be used for
+debugging purposes. Since Redis 2.8 a new commands were introduced in order to
+iterate the key space and other large collections incrementally, please check
+the <code>SCAN</code>, <code>SSCAN</code>, <code>HSCAN</code> and <code>ZSCAN</code> commands for more information.</p>
+<h2 id="latency-generated-by-fork">Latency generated by fork<a class="headerlink" href="#latency-generated-by-fork" title="Permanent link">⚓︎</a></h2>
+<p>In order to generate the RDB file in background, or to rewrite the Append Only File if AOF persistence is enabled, Redis has to fork background processes.
+The fork operation (running in the main thread) can induce latency by itself.</p>
+<p>Forking is an expensive operation on most Unix-like systems, since it involves
+copying a good number of objects linked to the process. This is especially
+true for the page table associated to the virtual memory mechanism.</p>
+<p>For instance on a Linux/AMD64 system, the memory is divided in 4 kB pages.
+To convert virtual addresses to physical addresses, each process stores
+a page table (actually represented as a tree) containing at least a pointer
+per page of the address space of the process. So a large 24 GB Redis instance
+requires a page table of 24 GB / 4 kB * 8 = 48 MB.</p>
+<p>When a background save is performed, this instance will have to be forked,
+which will involve allocating and copying 48 MB of memory. It takes time
+and CPU, especially on virtual machines where allocation and initialization
+of a large memory chunk can be expensive.</p>
+<h2 id="fork-time-in-different-systems">Fork time in different systems<a class="headerlink" href="#fork-time-in-different-systems" title="Permanent link">⚓︎</a></h2>
+<p>Modern hardware is pretty fast at copying the page table, but Xen is not.
+The problem with Xen is not virtualization-specific, but Xen-specific. For instance using VMware or Virtual Box does not result into slow fork time.
+The following is a table that compares fork time for different Redis instance
+size. Data is obtained performing a BGSAVE and looking at the <code>latest_fork_usec</code> filed in the <code>INFO</code> command output.</p>
+<p>However the good news is that <strong>new types of EC2 HVM based instances are much
+better with fork times</strong>, almost on par with physical servers, so for example
+using m3.medium (or better) instances will provide good results.</p>
+<ul>
+<li><strong>Linux beefy VM on VMware</strong> 6.0GB RSS forked in 77 milliseconds (12.8 milliseconds per GB).</li>
+<li><strong>Linux running on physical machine (Unknown HW)</strong> 6.1GB RSS forked in 80 milliseconds (13.1 milliseconds per GB)</li>
+<li><strong>Linux running on physical machine (Xeon @ 2.27Ghz)</strong> 6.9GB RSS forked into 62 milliseconds (9 milliseconds per GB).</li>
+<li><strong>Linux VM on 6sync (KVM)</strong> 360 MB RSS forked in 8.2 milliseconds (23.3 milliseconds per GB).</li>
+<li><strong>Linux VM on EC2, old instance types (Xen)</strong> 6.1GB RSS forked in 1460 milliseconds (239.3 milliseconds per GB).</li>
+<li><strong>Linux VM on EC2, new instance types (Xen)</strong> 1GB RSS forked in 10 milliseconds (10 milliseconds per GB).</li>
+<li><strong>Linux VM on Linode (Xen)</strong> 0.9GBRSS forked into 382 milliseconds (424 milliseconds per GB).</li>
+</ul>
+<p>As you can see certain VMs running on Xen have a performance hit that is between one order to two orders of magnitude. For EC2 users the suggestion is simple: use modern HVM based instances.</p>
+<h2 id="latency-induced-by-transparent-huge-pages">Latency induced by transparent huge pages<a class="headerlink" href="#latency-induced-by-transparent-huge-pages" title="Permanent link">⚓︎</a></h2>
+<p>Unfortunately when a Linux kernel has transparent huge pages enabled, Redis
+incurs to a big latency penalty after the <code>fork</code> call is used in order to
+persist on disk. Huge pages are the cause of the following issue:</p>
+<ol>
+<li>Fork is called, two processes with shared huge pages are created.</li>
+<li>In a busy instance, a few event loops runs will cause commands to target a few thousand of pages, causing the copy on write of almost the whole process memory.</li>
+<li>This will result in big latency and big memory usage.</li>
+</ol>
+<p>Make sure to <strong>disable transparent huge pages</strong> using the following command:</p>
+<div class="highlight"><pre><span></span><code>echo never &gt; /sys/kernel/mm/transparent_hugepage/enabled
+</code></pre></div>
+<h2 id="latency-induced-by-swapping-operating-system-paging">Latency induced by swapping (operating system paging)<a class="headerlink" href="#latency-induced-by-swapping-operating-system-paging" title="Permanent link">⚓︎</a></h2>
+<p>Linux (and many other modern operating systems) is able to relocate memory
+pages from the memory to the disk, and vice versa, in order to use the
+system memory efficiently.</p>
+<p>If a Redis page is moved by the kernel from the memory to the swap file, when
+the data stored in this memory page is used by Redis (for example accessing
+a key stored into this memory page) the kernel will stop the Redis process
+in order to move the page back into the main memory. This is a slow operation
+involving random I/Os (compared to accessing a page that is already in memory)
+and will result into anomalous latency experienced by Redis clients.</p>
+<p>The kernel relocates Redis memory pages on disk mainly because of three reasons:</p>
+<ul>
+<li>The system is under memory pressure since the running processes are demanding
+more physical memory than the amount that is available. The simplest instance of
+this problem is simply Redis using more memory than is available.</li>
+<li>The Redis instance data set, or part of the data set, is mostly completely idle
+(never accessed by clients), so the kernel could swap idle memory pages on disk.
+This problem is very rare since even a moderately slow instance will touch all
+the memory pages often, forcing the kernel to retain all the pages in memory.</li>
+<li>Some processes are generating massive read or write I/Os on the system. Because
+files are generally cached, it tends to put pressure on the kernel to increase
+the filesystem cache, and therefore generate swapping activity. Please note it
+includes Redis RDB and/or AOF background threads which can produce large files.</li>
+</ul>
+<p>Fortunately Linux offers good tools to investigate the problem, so the simplest
+thing to do is when latency due to swapping is suspected is just to check if
+this is the case.</p>
+<p>The first thing to do is to checking the amount of Redis memory that is swapped
+on disk. In order to do so you need to obtain the Redis instance pid:</p>
+<div class="highlight"><pre><span></span><code>$ redis-cli info | grep process_id
+process_id:5454
+</code></pre></div>
+<p>Now enter the /proc file system directory for this process:</p>
+<div class="highlight"><pre><span></span><code>$ cd /proc/5454
+</code></pre></div>
+<p>Here you'll find a file called <strong>smaps</strong> that describes the memory layout of
+the Redis process (assuming you are using Linux 2.6.16 or newer).
+This file contains very detailed information about our process memory maps,
+and one field called <strong>Swap</strong> is exactly what we are looking for. However
+there is not just a single swap field since the smaps file contains the
+different memory maps of our Redis process (The memory layout of a process
+is more complex than a simple linear array of pages).</p>
+<p>Since we are interested in all the memory swapped by our process the first thing
+to do is to grep for the Swap field across all the file:</p>
+<div class="highlight"><pre><span></span><code>$ cat smaps | grep &#39;Swap:&#39;
+Swap:                  0 kB
+Swap:                  0 kB
+Swap:                  0 kB
+Swap:                  0 kB
+Swap:                  0 kB
+Swap:                 12 kB
+Swap:                156 kB
+Swap:                  8 kB
+Swap:                  0 kB
+Swap:                  0 kB
+Swap:                  0 kB
+Swap:                  0 kB
+Swap:                  0 kB
+Swap:                  0 kB
+Swap:                  0 kB
+Swap:                  0 kB
+Swap:                  0 kB
+Swap:                  4 kB
+Swap:                  0 kB
+Swap:                  0 kB
+Swap:                  4 kB
+Swap:                  0 kB
+Swap:                  0 kB
+Swap:                  4 kB
+Swap:                  4 kB
+Swap:                  0 kB
+Swap:                  0 kB
+Swap:                  0 kB
+Swap:                  0 kB
+Swap:                  0 kB
+</code></pre></div>
+<p>If everything is 0 kB, or if there are sporadic 4k entries, everything is
+perfectly normal. Actually in our example instance (the one of a real web
+site running Redis and serving hundreds of users every second) there are a
+few entries that show more swapped pages. To investigate if this is a serious
+problem or not we change our command in order to also print the size of the
+memory map:</p>
+<div class="highlight"><pre><span></span><code>$ cat smaps | egrep &#39;^(Swap|Size)&#39;
+Size:                316 kB
+Swap:                  0 kB
+Size:                  4 kB
+Swap:                  0 kB
+Size:                  8 kB
+Swap:                  0 kB
+Size:                 40 kB
+Swap:                  0 kB
+Size:                132 kB
+Swap:                  0 kB
+Size:             720896 kB
+Swap:                 12 kB
+Size:               4096 kB
+Swap:                156 kB
+Size:               4096 kB
+Swap:                  8 kB
+Size:               4096 kB
+Swap:                  0 kB
+Size:                  4 kB
+Swap:                  0 kB
+Size:               1272 kB
+Swap:                  0 kB
+Size:                  8 kB
+Swap:                  0 kB
+Size:                  4 kB
+Swap:                  0 kB
+Size:                 16 kB
+Swap:                  0 kB
+Size:                 84 kB
+Swap:                  0 kB
+Size:                  4 kB
+Swap:                  0 kB
+Size:                  4 kB
+Swap:                  0 kB
+Size:                  8 kB
+Swap:                  4 kB
+Size:                  8 kB
+Swap:                  0 kB
+Size:                  4 kB
+Swap:                  0 kB
+Size:                  4 kB
+Swap:                  4 kB
+Size:                144 kB
+Swap:                  0 kB
+Size:                  4 kB
+Swap:                  0 kB
+Size:                  4 kB
+Swap:                  4 kB
+Size:                 12 kB
+Swap:                  4 kB
+Size:                108 kB
+Swap:                  0 kB
+Size:                  4 kB
+Swap:                  0 kB
+Size:                  4 kB
+Swap:                  0 kB
+Size:                272 kB
+Swap:                  0 kB
+Size:                  4 kB
+Swap:                  0 kB
+</code></pre></div>
+<p>As you can see from the output, there is a map of 720896 kB
+(with just 12 kB swapped) and 156 kB more swapped in another map:
+basically a very small amount of our memory is swapped so this is not
+going to create any problem at all.</p>
+<p>If instead a non trivial amount of the process memory is swapped on disk your
+latency problems are likely related to swapping. If this is the case with your
+Redis instance you can further verify it using the <strong>vmstat</strong> command:</p>
+<div class="highlight"><pre><span></span><code>$ vmstat 1
+procs -----------memory---------- ---swap-- -----io---- -system-- ----cpu----
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa
+ 0  0   3980 697932 147180 1406456    0    0     2     2    2    0  4  4 91  0
+ 0  0   3980 697428 147180 1406580    0    0     0     0 19088 16104  9  6 84  0
+ 0  0   3980 697296 147180 1406616    0    0     0    28 18936 16193  7  6 87  0
+ 0  0   3980 697048 147180 1406640    0    0     0     0 18613 15987  6  6 88  0
+ 2  0   3980 696924 147180 1406656    0    0     0     0 18744 16299  6  5 88  0
+ 0  0   3980 697048 147180 1406688    0    0     0     4 18520 15974  6  6 88  0
+^C
+</code></pre></div>
+<p>The interesting part of the output for our needs are the two columns <strong>si</strong>
+and <strong>so</strong>, that counts the amount of memory swapped from/to the swap file. If
+you see non zero counts in those two columns then there is swapping activity
+in your system.</p>
+<p>Finally, the <strong>iostat</strong> command can be used to check the global I/O activity of
+the system.</p>
+<div class="highlight"><pre><span></span><code>$ iostat -xk 1
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+          13.55    0.04    2.92    0.53    0.00   82.95
+
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq-sz avgqu-sz   await  svctm  %util
+sda               0.77     0.00    0.01    0.00     0.40     0.00    73.65     0.00    3.62   2.58   0.00
+sdb               1.27     4.75    0.82    3.54    38.00    32.32    32.19     0.11   24.80   4.24   1.85
+</code></pre></div>
+<p>If your latency problem is due to Redis memory being swapped on disk you need
+to lower the memory pressure in your system, either adding more RAM if Redis
+is using more memory than the available, or avoiding running other memory
+hungry processes in the same system.</p>
+<h2 id="latency-due-to-aof-and-disk-io">Latency due to AOF and disk I/O<a class="headerlink" href="#latency-due-to-aof-and-disk-io" title="Permanent link">⚓︎</a></h2>
+<p>Another source of latency is due to the Append Only File support on Redis.
+The AOF basically uses two system calls to accomplish its work. One is
+write(2) that is used in order to write data to the append only file, and
+the other one is fdatasync(2) that is used in order to flush the kernel
+file buffer on disk in order to ensure the durability level specified by
+the user.</p>
+<p>Both the write(2) and fdatasync(2) calls can be source of latency.
+For instance write(2) can block both when there is a system wide sync
+in progress, or when the output buffers are full and the kernel requires
+to flush on disk in order to accept new writes.</p>
+<p>The fdatasync(2) call is a worse source of latency as with many combinations
+of kernels and file systems used it can take from a few milliseconds to
+a few seconds to complete, especially in the case of some other process
+doing I/O. For this reason when possible Redis does the fdatasync(2) call
+in a different thread since Redis 2.4.</p>
+<p>We'll see how configuration can affect the amount and source of latency
+when using the AOF file.</p>
+<p>The AOF can be configured to perform a fsync on disk in three different
+ways using the <strong>appendfsync</strong> configuration option (this setting can be
+modified at runtime using the <strong>CONFIG SET</strong> command).</p>
+<ul>
+<li>
+<p>When appendfsync is set to the value of <strong>no</strong> Redis performs no fsync.
+In this configuration the only source of latency can be write(2).
+When this happens usually there is no solution since simply the disk can't
+cope with the speed at which Redis is receiving data, however this is
+uncommon if the disk is not seriously slowed down by other processes doing
+I/O.</p>
+</li>
+<li>
+<p>When appendfsync is set to the value of <strong>everysec</strong> Redis performs a
+fsync every second. It uses a different thread, and if the fsync is still
+in progress Redis uses a buffer to delay the write(2) call up to two seconds
+(since write would block on Linux if a fsync is in progress against the
+same file). However if the fsync is taking too long Redis will eventually
+perform the write(2) call even if the fsync is still in progress, and this
+can be a source of latency.</p>
+</li>
+<li>
+<p>When appendfsync is set to the value of <strong>always</strong> a fsync is performed
+at every write operation before replying back to the client with an OK code
+(actually Redis will try to cluster many commands executed at the same time
+into a single fsync). In this mode performances are very low in general and
+it is strongly recommended to use a fast disk and a file system implementation
+that can perform the fsync in short time.</p>
+</li>
+</ul>
+<p>Most Redis users will use either the <strong>no</strong> or <strong>everysec</strong> setting for the
+appendfsync configuration directive. The suggestion for minimum latency is
+to avoid other processes doing I/O in the same system.
+Using an SSD disk can help as well, but usually even non SSD disks perform
+well with the append only file if the disk is spare as Redis writes
+to the append only file without performing any seek.</p>
+<p>If you want to investigate your latency issues related to the append only
+file you can use the strace command under Linux:</p>
+<div class="highlight"><pre><span></span><code>sudo strace -p $(pidof redis-server) -T -e trace=fdatasync
+</code></pre></div>
+<p>The above command will show all the fdatasync(2) system calls performed by
+Redis in the main thread. With the above command you'll not see the
+fdatasync system calls performed by the background thread when the
+appendfsync config option is set to <strong>everysec</strong>. In order to do so
+just add the -f switch to strace.</p>
+<p>If you wish you can also see both fdatasync and write system calls with the
+following command:</p>
+<div class="highlight"><pre><span></span><code>sudo strace -p $(pidof redis-server) -T -e trace=fdatasync,write
+</code></pre></div>
+<p>However since write(2) is also used in order to write data to the client
+sockets this will likely show too many things unrelated to disk I/O.
+Apparently there is no way to tell strace to just show slow system calls so
+I use the following command:</p>
+<div class="highlight"><pre><span></span><code>sudo strace -f -p $(pidof redis-server) -T -e trace=fdatasync,write 2&gt;&amp;1 | grep -v &#39;0.0&#39; | grep -v unfinished
+</code></pre></div>
+<h2 id="latency-generated-by-expires">Latency generated by expires<a class="headerlink" href="#latency-generated-by-expires" title="Permanent link">⚓︎</a></h2>
+<p>Redis evict expired keys in two ways:</p>
+<ul>
+<li>One <em>lazy</em> way expires a key when it is requested by a command, but it is found to be already expired.</li>
+<li>One <em>active</em> way expires a few keys every 100 milliseconds.</li>
+</ul>
+<p>The active expiring is designed to be adaptive. An expire cycle is started every 100 milliseconds (10 times per second), and will do the following:</p>
+<ul>
+<li>Sample <code>ACTIVE_EXPIRE_CYCLE_LOOKUPS_PER_LOOP</code> keys, evicting all the keys already expired.</li>
+<li>If the more than 25% of the keys were found expired, repeat.</li>
+</ul>
+<p>Given that <code>ACTIVE_EXPIRE_CYCLE_LOOKUPS_PER_LOOP</code> is set to 20 by default, and the process is performed ten times per second, usually just 200 keys per second are actively expired. This is enough to clean the DB fast enough even when already expired keys are not accessed for a long time, so that the <em>lazy</em> algorithm does not help. At the same time expiring just 200 keys per second has no effects in the latency a Redis instance.</p>
+<p>However the algorithm is adaptive and will loop if it finds more than 25% of keys already expired in the set of sampled keys. But given that we run the algorithm ten times per second, this means that the unlucky event of more than 25% of the keys in our random sample are expiring at least <em>in the same second</em>.</p>
+<p>Basically this means that <strong>if the database has many, many keys expiring in the same second, and these make up at least 25% of the current population of keys with an expire set</strong>, Redis can block in order to get the percentage of keys already expired below 25%.</p>
+<p>This approach is needed in order to avoid using too much memory for keys that are already expired, and usually is absolutely harmless since it's strange that a big number of keys are going to expire in the same exact second, but it is not impossible that the user used <code>EXPIREAT</code> extensively with the same Unix time.</p>
+<p>In short: be aware that many keys expiring at the same moment can be a source of latency.</p>
+<h2 id="redis-software-watchdog">Redis software watchdog<a class="headerlink" href="#redis-software-watchdog" title="Permanent link">⚓︎</a></h2>
+<p>Redis 2.6 introduces the <em>Redis Software Watchdog</em> that is a debugging tool
+designed to track those latency problems that for one reason or the other
+escaped an analysis using normal tools.</p>
+<p>The software watchdog is an experimental feature. While it is designed to
+be used in production environments care should be taken to backup the database
+before proceeding as it could possibly have unexpected interactions with the
+normal execution of the Redis server.</p>
+<p>It is important to use it only as <em>last resort</em> when there is no way to track the issue by other means.</p>
+<p>This is how this feature works:</p>
+<ul>
+<li>The user enables the software watchdog using the <code>CONFIG SET</code> command.</li>
+<li>Redis starts monitoring itself constantly.</li>
+<li>If Redis detects that the server is blocked into some operation that is not returning fast enough, and that may be the source of the latency issue, a low level report about where the server is blocked is dumped on the log file.</li>
+<li>The user contacts the developers writing a message in the Redis Google Group, including the watchdog report in the message.</li>
+</ul>
+<p>Note that this feature cannot be enabled using the redis.conf file, because it is designed to be enabled only in already running instances and only for debugging purposes.</p>
+<p>To enable the feature just use the following:</p>
+<div class="highlight"><pre><span></span><code>CONFIG SET watchdog-period 500
+</code></pre></div>
+<p>The period is specified in milliseconds. In the above example I specified to log latency issues only if the server detects a delay of 500 milliseconds or greater. The minimum configurable period is 200 milliseconds.</p>
+<p>When you are done with the software watchdog you can turn it off setting the <code>watchdog-period</code> parameter to 0. <strong>Important:</strong> remember to do this because keeping the instance with the watchdog turned on for a longer time than needed is generally not a good idea.</p>
+<p>The following is an example of what you'll see printed in the log file once the software watchdog detects a delay longer than the configured one:</p>
+<div class="highlight"><pre><span></span><code>[8547 | signal handler] (1333114359)
+--- WATCHDOG TIMER EXPIRED ---
+/lib/libc.so.6(nanosleep+0x2d) [0x7f16b5c2d39d]
+/lib/libpthread.so.0(+0xf8f0) [0x7f16b5f158f0]
+/lib/libc.so.6(nanosleep+0x2d) [0x7f16b5c2d39d]
+/lib/libc.so.6(usleep+0x34) [0x7f16b5c62844]
+./redis-server(debugCommand+0x3e1) [0x43ab41]
+./redis-server(call+0x5d) [0x415a9d]
+./redis-server(processCommand+0x375) [0x415fc5]
+./redis-server(processInputBuffer+0x4f) [0x4203cf]
+./redis-server(readQueryFromClient+0xa0) [0x4204e0]
+./redis-server(aeProcessEvents+0x128) [0x411b48]
+./redis-server(aeMain+0x2b) [0x411dbb]
+./redis-server(main+0x2b6) [0x418556]
+/lib/libc.so.6(__libc_start_main+0xfd) [0x7f16b5ba1c4d]
+./redis-server() [0x411099]
+------
+</code></pre></div>
+<p>Note: in the example the <strong>DEBUG SLEEP</strong> command was used in order to block the server. The stack trace is different if the server blocks in a different context.</p>
+<p>If you happen to collect multiple watchdog stack traces you are encouraged to send everything to the Redis Google Group: the more traces we obtain, the simpler it will be to understand what the problem with your instance is.</p>
+
+  <hr>
+<div class="md-source-file">
+  <small>
+    
+      最后更新:
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 25, 2023</span>
+      
+        <br>
+        创建日期:
+        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 25, 2023</span>
+      
+    
+  </small>
+</div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../latency-monitor/" class="md-footer__link md-footer__link--prev" aria-label="上一页: Redis latency monitoring">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                Redis latency monitoring
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../memory-optimization/" class="md-footer__link md-footer__link--next" aria-label="下一页: Memory optimization">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                Memory optimization
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2023 Ean Yang
+    </div>
+  
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/YQisme" target="_blank" rel="noopener" title="github主页" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://space.bilibili.com/244185393?spm_id_from=333.788.0.0" target="_blank" rel="noopener" title="b站主页" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M488.6 104.1c16.7 18.1 24.4 39.7 23.3 65.7v202.4c-.4 26.4-9.2 48.1-26.5 65.1-17.2 17-39.1 25.9-65.5 26.7H92.02c-26.45-.8-48.21-9.8-65.28-27.2C9.682 419.4.767 396.5 0 368.2V169.8c.767-26 9.682-47.6 26.74-65.7C43.81 87.75 65.57 78.77 92.02 78h29.38L96.05 52.19c-5.75-5.73-8.63-13-8.63-21.79 0-8.8 2.88-16.06 8.63-21.797C101.8 2.868 109.1 0 117.9 0s16.1 2.868 21.9 8.603L213.1 78h88l74.5-69.397C381.7 2.868 389.2 0 398 0c8.8 0 16.1 2.868 21.9 8.603 5.7 5.737 8.6 12.997 8.6 21.797 0 8.79-2.9 16.06-8.6 21.79L394.6 78h29.3c26.4.77 48 9.75 64.7 26.1zm-38.8 69.7c-.4-9.6-3.7-17.4-10.7-23.5-5.2-6.1-14-9.4-22.7-9.8H96.05c-9.59.4-17.45 3.7-23.58 9.8-6.14 6.1-9.4 13.9-9.78 23.5v194.4c0 9.2 3.26 17 9.78 23.5s14.38 9.8 23.58 9.8H416.4c9.2 0 17-3.3 23.3-9.8 6.3-6.5 9.7-14.3 10.1-23.5V173.8zm-264.3 42.7c6.3 6.3 9.7 14.1 10.1 23.2V273c-.4 9.2-3.7 16.9-9.8 23.2-6.2 6.3-14 9.5-23.6 9.5-9.6 0-17.5-3.2-23.6-9.5-6.1-6.3-9.4-14-9.8-23.2v-33.3c.4-9.1 3.8-16.9 10.1-23.2 6.3-6.3 13.2-9.6 23.3-10 9.2.4 17 3.7 23.3 10zm191.5 0c6.3 6.3 9.7 14.1 10.1 23.2V273c-.4 9.2-3.7 16.9-9.8 23.2-6.1 6.3-14 9.5-23.6 9.5-9.6 0-17.4-3.2-23.6-9.5-7-6.3-9.4-14-9.7-23.2v-33.3c.3-9.1 3.7-16.9 10-23.2 6.3-6.3 14.1-9.6 23.3-10 9.2.4 17 3.7 23.3 10z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://eanyang7.com" target="_blank" rel="noopener" title="个人主页" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M112 48a48 48 0 1 1 96 0 48 48 0 1 1-96 0zm40 304v128c0 17.7-14.3 32-32 32s-32-14.3-32-32V256.9l-28.6 47.6c-9.1 15.1-28.8 20-43.9 10.9s-20-28.8-10.9-43.9l58.3-97c17.4-28.9 48.6-46.6 82.3-46.6h29.7c33.7 0 64.9 17.7 82.3 46.6l58.3 97c9.1 15.1 4.2 34.8-10.9 43.9s-34.8 4.2-43.9-10.9L232 256.9V480c0 17.7-14.3 32-32 32s-32-14.3-32-32V352h-16z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.tracking", "navigation.prune", "navigation.top", "toc.follow", "header.autohide", "navigation.footer", "search.suggest", "search.highlight", "search.share", "content.action.edit", "content.action.view", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.6c14ae12.min.js"></script>
+      
+    
+  </body>
+</html>

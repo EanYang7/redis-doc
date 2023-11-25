@@ -1,0 +1,2363 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Horizontal scaling with Redis Cluster">
+      
+      
+        <meta name="author" content="Ean Yang">
+      
+      
+        <link rel="canonical" href="https://eanyang7.github.io/redis-doc/7-management/scaling/">
+      
+      
+        <link rel="prev" href="../replication/">
+      
+      
+        <link rel="next" href="../sentinel/">
+      
+      
+      <link rel="icon" href="../../assets/favicon.jpg">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.12">
+    
+    
+      
+        <title>Scale with Redis Cluster - redis 文档</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.fad675c6.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.356b1318.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="red" data-md-color-accent="deep-purple">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#redis-cluster-101" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../.." title="redis 文档" class="md-header__button md-logo" aria-label="redis 文档" data-md-component="logo">
+      
+  <img src="../../assets/logo.jpg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            redis 文档
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Scale with Redis Cluster
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="red" data-md-color-accent="deep-purple"  aria-label="切换为暗黑模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换为暗黑模式" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5c-.84 0-1.65.15-2.39.42L12 2M3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29L3.34 7m.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14L3.36 17M20.65 7l-1.77 3.79a7.023 7.023 0 0 0-2.38-4.15l4.15.36m-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29L20.64 17M12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44L12 22Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="red"  aria-label="切换为浅色模式"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="切换为浅色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3 3.19.09m3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95 2.06.05m-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7 0-.24-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91 1.61 0 2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08Z"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/EanYang7/redis-doc" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M186.1 328.7c0 20.9-10.9 55.1-36.7 55.1s-36.7-34.2-36.7-55.1 10.9-55.1 36.7-55.1 36.7 34.2 36.7 55.1zM480 278.2c0 31.9-3.2 65.7-17.5 95-37.9 76.6-142.1 74.8-216.7 74.8-75.8 0-186.2 2.7-225.6-74.8-14.6-29-20.2-63.1-20.2-95 0-41.9 13.9-81.5 41.5-113.6-5.2-15.8-7.7-32.4-7.7-48.8 0-21.5 4.9-32.3 14.6-51.8 45.3 0 74.3 9 108.8 36 29-6.9 58.8-10 88.7-10 27 0 54.2 2.9 80.4 9.2 34-26.7 63-35.2 107.8-35.2 9.8 19.5 14.6 30.3 14.6 51.8 0 16.4-2.6 32.7-7.7 48.2 27.5 32.4 39 72.3 39 114.2zm-64.3 50.5c0-43.9-26.7-82.6-73.5-82.6-18.9 0-37 3.4-56 6-14.9 2.3-29.8 3.2-45.1 3.2-15.2 0-30.1-.9-45.1-3.2-18.7-2.6-37-6-56-6-46.8 0-73.5 38.7-73.5 82.6 0 87.8 80.4 101.3 150.4 101.3h48.2c70.3 0 150.6-13.4 150.6-101.3zm-82.6-55.1c-25.8 0-36.7 34.2-36.7 55.1s10.9 55.1 36.7 55.1 36.7-34.2 36.7-55.1-10.9-55.1-36.7-55.1z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    github仓库
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="redis 文档" class="md-nav__button md-logo" aria-label="redis 文档" data-md-component="logo">
+      
+  <img src="../../assets/logo.jpg" alt="logo">
+
+    </a>
+    redis 文档
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/EanYang7/redis-doc" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M186.1 328.7c0 20.9-10.9 55.1-36.7 55.1s-36.7-34.2-36.7-55.1 10.9-55.1 36.7-55.1 36.7 34.2 36.7 55.1zM480 278.2c0 31.9-3.2 65.7-17.5 95-37.9 76.6-142.1 74.8-216.7 74.8-75.8 0-186.2 2.7-225.6-74.8-14.6-29-20.2-63.1-20.2-95 0-41.9 13.9-81.5 41.5-113.6-5.2-15.8-7.7-32.4-7.7-48.8 0-21.5 4.9-32.3 14.6-51.8 45.3 0 74.3 9 108.8 36 29-6.9 58.8-10 88.7-10 27 0 54.2 2.9 80.4 9.2 34-26.7 63-35.2 107.8-35.2 9.8 19.5 14.6 30.3 14.6 51.8 0 16.4-2.6 32.7-7.7 48.2 27.5 32.4 39 72.3 39 114.2zm-64.3 50.5c0-43.9-26.7-82.6-73.5-82.6-18.9 0-37 3.4-56 6-14.9 2.3-29.8 3.2-45.1 3.2-15.2 0-30.1-.9-45.1-3.2-18.7-2.6-37-6-56-6-46.8 0-73.5 38.7-73.5 82.6 0 87.8 80.4 101.3 150.4 101.3h48.2c70.3 0 150.6-13.4 150.6-101.3zm-82.6-55.1c-25.8 0-36.7 34.2-36.7 55.1s10.9 55.1 36.7 55.1 36.7-34.2 36.7-55.1-10.9-55.1-36.7-55.1z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    github仓库
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Documentation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../0-about/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    0 about
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../1-get-started/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    1 get started
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../2-install/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    2 install
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../3-connect/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    3 connect
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../4-data-types/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    4 data types
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../5-interact/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    5 interact
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../6-manual/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    6 manual
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    7 management
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            7 management
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../_index/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Manage Redis
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../admin/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis administration
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config-file/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis configuration file example
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis configuration
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debugging/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Debugging
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../persistence/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis persistence
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../replication/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis replication
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Scale with Redis Cluster
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Scale with Redis Cluster
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#redis-cluster-101" class="md-nav__link">
+    <span class="md-ellipsis">
+      Redis Cluster 101
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Redis Cluster 101">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#redis-cluster-tcp-ports" class="md-nav__link">
+    <span class="md-ellipsis">
+      Redis Cluster TCP ports
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redis-cluster-and-docker" class="md-nav__link">
+    <span class="md-ellipsis">
+      Redis Cluster and Docker
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redis-cluster-data-sharding" class="md-nav__link">
+    <span class="md-ellipsis">
+      Redis Cluster data sharding
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redis-cluster-master-replica-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Redis Cluster master-replica model
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redis-cluster-consistency-guarantees" class="md-nav__link">
+    <span class="md-ellipsis">
+      Redis Cluster consistency guarantees
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#redis-cluster-configuration-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Redis Cluster configuration parameters
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create-and-use-a-redis-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create and use a Redis Cluster
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Create and use a Redis Cluster">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#requirements-to-create-a-redis-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      Requirements to create a Redis Cluster
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create-a-redis-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create a Redis Cluster
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interact-with-the-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interact with the cluster
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#write-an-example-app-with-redis-rb-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      Write an example app with redis-rb-cluster
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reshard-the-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      Reshard the cluster
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a-more-interesting-example-application" class="md-nav__link">
+    <span class="md-ellipsis">
+      A more interesting example application
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#test-the-failover" class="md-nav__link">
+    <span class="md-ellipsis">
+      Test the failover
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#manual-failover" class="md-nav__link">
+    <span class="md-ellipsis">
+      Manual failover
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add-a-new-node" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add a new node
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Add a new node">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#add-a-new-node-as-a-replica" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add a new node as a replica
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remove-a-node" class="md-nav__link">
+    <span class="md-ellipsis">
+      Remove a node
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#replica-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Replica migration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#upgrade-nodes-in-a-redis-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      Upgrade nodes in a Redis Cluster
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#migrate-to-redis-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      Migrate to Redis Cluster
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#learn-more" class="md-nav__link">
+    <span class="md-ellipsis">
+      Learn more
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sentinel/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    High availability with Redis Sentinel
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Troubleshooting Redis
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../optimization/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    Optimization
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../security/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    Security
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../8-reference/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    8 reference
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#redis-cluster-101" class="md-nav__link">
+    <span class="md-ellipsis">
+      Redis Cluster 101
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Redis Cluster 101">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#redis-cluster-tcp-ports" class="md-nav__link">
+    <span class="md-ellipsis">
+      Redis Cluster TCP ports
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redis-cluster-and-docker" class="md-nav__link">
+    <span class="md-ellipsis">
+      Redis Cluster and Docker
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redis-cluster-data-sharding" class="md-nav__link">
+    <span class="md-ellipsis">
+      Redis Cluster data sharding
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redis-cluster-master-replica-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Redis Cluster master-replica model
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#redis-cluster-consistency-guarantees" class="md-nav__link">
+    <span class="md-ellipsis">
+      Redis Cluster consistency guarantees
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#redis-cluster-configuration-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Redis Cluster configuration parameters
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#create-and-use-a-redis-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create and use a Redis Cluster
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Create and use a Redis Cluster">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#requirements-to-create-a-redis-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      Requirements to create a Redis Cluster
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create-a-redis-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      Create a Redis Cluster
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interact-with-the-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      Interact with the cluster
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#write-an-example-app-with-redis-rb-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      Write an example app with redis-rb-cluster
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reshard-the-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      Reshard the cluster
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a-more-interesting-example-application" class="md-nav__link">
+    <span class="md-ellipsis">
+      A more interesting example application
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#test-the-failover" class="md-nav__link">
+    <span class="md-ellipsis">
+      Test the failover
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#manual-failover" class="md-nav__link">
+    <span class="md-ellipsis">
+      Manual failover
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add-a-new-node" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add a new node
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Add a new node">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#add-a-new-node-as-a-replica" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add a new node as a replica
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#remove-a-node" class="md-nav__link">
+    <span class="md-ellipsis">
+      Remove a node
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#replica-migration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Replica migration
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#upgrade-nodes-in-a-redis-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      Upgrade nodes in a Redis Cluster
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#migrate-to-redis-cluster" class="md-nav__link">
+    <span class="md-ellipsis">
+      Migrate to Redis Cluster
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#learn-more" class="md-nav__link">
+    <span class="md-ellipsis">
+      Learn more
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+    <a href="https://github.com/EanYang7/redis-doc/tree/main/docs/7-management/scaling.md" title="编辑此页" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/EanYang7/redis-doc/tree/main/docs/7-management/scaling.md" title="查看本页的源代码" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0 8a5 5 0 0 1-5-5 5 5 0 0 1 5-5 5 5 0 0 1 5 5 5 5 0 0 1-5 5m0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5Z"/></svg>
+    </a>
+  
+
+
+  <h1>Scale with Redis Cluster</h1>
+
+<p>Redis scales horizontally with a deployment topology called Redis Cluster. 
+This topic will teach you how to set up, test, and operate Redis Cluster in production.
+You will learn about the availability and consistency characteristics of Redis Cluster from the end user's point of view.</p>
+<p>If you plan to run a production Redis Cluster deployment or want to understand better how Redis Cluster works internally, consult the <a href="/topics/cluster-spec">Redis Cluster specification</a>. To learn how Redis Enterprise handles scaling, see <a href="https://redis.com/redis-enterprise/technology/linear-scaling-redis-enterprise/">Linear Scaling with Redis Enterprise</a>.</p>
+<h2 id="redis-cluster-101">Redis Cluster 101<a class="headerlink" href="#redis-cluster-101" title="Permanent link">⚓︎</a></h2>
+<p>Redis Cluster provides a way to run a Redis installation where data is automatically sharded across multiple Redis nodes. 
+Redis Cluster also provides some degree of availability during partitions&mdash;in practical terms, the ability to continue operations when some nodes fail or are unable to communicate. 
+However, the cluster will become unavailable in the event of larger failures (for example, when the majority of masters are unavailable).</p>
+<p>So, with Redis Cluster, you get the ability to:</p>
+<ul>
+<li>Automatically split your dataset among multiple nodes.</li>
+<li>Continue operations when a subset of the nodes are experiencing failures or are unable to communicate with the rest of the cluster.</li>
+</ul>
+<h4 id="redis-cluster-tcp-ports">Redis Cluster TCP ports<a class="headerlink" href="#redis-cluster-tcp-ports" title="Permanent link">⚓︎</a></h4>
+<p>Every Redis Cluster node requires two open TCP connections: a Redis TCP port used to serve clients, e.g., 6379, and second port known as the <em>cluster bus port</em>. 
+By default, the cluster bus port is set by adding 10000 to the data port (e.g., 16379); however, you can override this in the <code>cluster-port</code> configuration.</p>
+<p>Cluster bus is a node-to-node communication channel that uses a binary protocol, which is more suited to exchanging information between nodes due to
+little bandwidth and processing time. 
+Nodes use the cluster bus for failure detection, configuration updates, failover authorization, and so forth. 
+Clients should never try to communicate with the cluster bus port, but rather use the Redis command port. 
+However, make sure you open both ports in your firewall, otherwise Redis cluster nodes won't be able to communicate.</p>
+<p>For a Redis Cluster to work properly you need, for each node:</p>
+<ol>
+<li>The client communication port (usually 6379) used to communicate with clients and be open to all the clients that need to reach the cluster, plus all the other cluster nodes that use the client port for key migrations.</li>
+<li>The cluster bus port must be reachable from all the other cluster nodes.</li>
+</ol>
+<p>If you don't open both TCP ports, your cluster will not work as expected.</p>
+<h4 id="redis-cluster-and-docker">Redis Cluster and Docker<a class="headerlink" href="#redis-cluster-and-docker" title="Permanent link">⚓︎</a></h4>
+<p>Currently, Redis Cluster does not support NATted environments and in general
+environments where IP addresses or TCP ports are remapped.</p>
+<p>Docker uses a technique called <em>port mapping</em>: programs running inside Docker containers may be exposed with a different port compared to the one the program believes to be using. 
+This is useful for running multiple containers using the same ports, at the same time, in the same server.</p>
+<p>To make Docker compatible with Redis Cluster, you need to use Docker's <em>host networking mode</em>. 
+Please see the <code>--net=host</code> option in the <a href="https://docs.docker.com/engine/userguide/networking/dockernetworks/">Docker documentation</a> for more information.</p>
+<h4 id="redis-cluster-data-sharding">Redis Cluster data sharding<a class="headerlink" href="#redis-cluster-data-sharding" title="Permanent link">⚓︎</a></h4>
+<p>Redis Cluster does not use consistent hashing, but a different form of sharding
+where every key is conceptually part of what we call a <strong>hash slot</strong>.</p>
+<p>There are 16384 hash slots in Redis Cluster, and to compute the hash
+slot for a given key, we simply take the CRC16 of the key modulo
+16384.</p>
+<p>Every node in a Redis Cluster is responsible for a subset of the hash slots,
+so, for example, you may have a cluster with 3 nodes, where:</p>
+<ul>
+<li>Node A contains hash slots from 0 to 5500.</li>
+<li>Node B contains hash slots from 5501 to 11000.</li>
+<li>Node C contains hash slots from 11001 to 16383.</li>
+</ul>
+<p>This makes it easy to add and remove cluster nodes. For example, if
+I want to add a new node D, I need to move some hash slots from nodes A, B, C
+to D. Similarly, if I want to remove node A from the cluster, I can just
+move the hash slots served by A to B and C. Once node A is empty,
+I can remove it from the cluster completely.</p>
+<p>Moving hash slots from a node to another does not require stopping
+any operations; therefore, adding and removing nodes, or changing the percentage of hash slots held by a node, requires no downtime.</p>
+<p>Redis Cluster supports multiple key operations as long as all of the keys involved in a single command execution (or whole transaction, or Lua script
+execution) belong to the same hash slot. The user can force multiple keys
+to be part of the same hash slot by using a feature called <em>hash tags</em>.</p>
+<p>Hash tags are documented in the Redis Cluster specification, but the gist is
+that if there is a substring between {} brackets in a key, only what is
+inside the string is hashed. For example, the keys <code>user:{123}:profile</code> and <code>user:{123}:account</code> are guaranteed to be in the same hash slot because they share the same hash tag. As a result, you can operate on these two keys in the same multi-key operation.</p>
+<h4 id="redis-cluster-master-replica-model">Redis Cluster master-replica model<a class="headerlink" href="#redis-cluster-master-replica-model" title="Permanent link">⚓︎</a></h4>
+<p>To remain available when a subset of master nodes are failing or are
+not able to communicate with the majority of nodes, Redis Cluster uses a
+master-replica model where every hash slot has from 1 (the master itself) to N
+replicas (N-1 additional replica nodes).</p>
+<p>In our example cluster with nodes A, B, C, if node B fails the cluster is not
+able to continue, since we no longer have a way to serve hash slots in the
+range 5501-11000.</p>
+<p>However, when the cluster is created (or at a later time), we add a replica
+node to every master, so that the final cluster is composed of A, B, C
+that are master nodes, and A1, B1, C1 that are replica nodes.
+This way, the system can continue if node B fails.</p>
+<p>Node B1 replicates B, and B fails, the cluster will promote node B1 as the new
+master and will continue to operate correctly.</p>
+<p>However, note that if nodes B and B1 fail at the same time, Redis Cluster will not be able to continue to operate.</p>
+<h4 id="redis-cluster-consistency-guarantees">Redis Cluster consistency guarantees<a class="headerlink" href="#redis-cluster-consistency-guarantees" title="Permanent link">⚓︎</a></h4>
+<p>Redis Cluster does not guarantee <strong>strong consistency</strong>. In practical
+terms this means that under certain conditions it is possible that Redis
+Cluster will lose writes that were acknowledged by the system to the client.</p>
+<p>The first reason why Redis Cluster can lose writes is because it uses
+asynchronous replication. This means that during writes the following
+happens:</p>
+<ul>
+<li>Your client writes to the master B.</li>
+<li>The master B replies OK to your client.</li>
+<li>The master B propagates the write to its replicas B1, B2 and B3.</li>
+</ul>
+<p>As you can see, B does not wait for an acknowledgement from B1, B2, B3 before
+replying to the client, since this would be a prohibitive latency penalty
+for Redis, so if your client writes something, B acknowledges the write,
+but crashes before being able to send the write to its replicas, one of the
+replicas (that did not receive the write) can be promoted to master, losing
+the write forever.</p>
+<p>This is very similar to what happens with most databases that are
+configured to flush data to disk every second, so it is a scenario you
+are already able to reason about because of past experiences with traditional
+database systems not involving distributed systems. Similarly you can
+improve consistency by forcing the database to flush data to disk before
+replying to the client, but this usually results in prohibitively low
+performance. That would be the equivalent of synchronous replication in
+the case of Redis Cluster.</p>
+<p>Basically, there is a trade-off to be made between performance and consistency.</p>
+<p>Redis Cluster has support for synchronous writes when absolutely needed,
+implemented via the <code>WAIT</code> command. This makes losing writes a lot less
+likely. However, note that Redis Cluster does not implement strong consistency
+even when synchronous replication is used: it is always possible, under more
+complex failure scenarios, that a replica that was not able to receive the write
+will be elected as master.</p>
+<p>There is another notable scenario where Redis Cluster will lose writes, that
+happens during a network partition where a client is isolated with a minority
+of instances including at least a master.</p>
+<p>Take as an example our 6 nodes cluster composed of A, B, C, A1, B1, C1,
+with 3 masters and 3 replicas. There is also a client, that we will call Z1.</p>
+<p>After a partition occurs, it is possible that in one side of the
+partition we have A, C, A1, B1, C1, and in the other side we have B and Z1.</p>
+<p>Z1 is still able to write to B, which will accept its writes. If the
+partition heals in a very short time, the cluster will continue normally.
+However, if the partition lasts enough time for B1 to be promoted to master
+on the majority side of the partition, the writes that Z1 has sent to B
+in the meantime will be lost.</p>
+<p>{{% alert title="Note" color="info" %}}
+There is a <strong>maximum window</strong> to the amount of writes Z1 will be able
+to send to B: if enough time has elapsed for the majority side of the
+partition to elect a replica as master, every master node in the minority
+side will have stopped accepting writes.
+{{% /alert %}}</p>
+<p>This amount of time is a very important configuration directive of Redis
+Cluster, and is called the <strong>node timeout</strong>.</p>
+<p>After node timeout has elapsed, a master node is considered to be failing,
+and can be replaced by one of its replicas.
+Similarly, after node timeout has elapsed without a master node to be able
+to sense the majority of the other master nodes, it enters an error state
+and stops accepting writes.</p>
+<h2 id="redis-cluster-configuration-parameters">Redis Cluster configuration parameters<a class="headerlink" href="#redis-cluster-configuration-parameters" title="Permanent link">⚓︎</a></h2>
+<p>We are about to create an example cluster deployment. 
+Before we continue, let's introduce the configuration parameters that Redis Cluster introduces
+in the <code>redis.conf</code> file.</p>
+<ul>
+<li><strong>cluster-enabled <code>&lt;yes/no&gt;</code></strong>: If yes, enables Redis Cluster support in a specific Redis instance. Otherwise the instance starts as a standalone instance as usual.</li>
+<li><strong>cluster-config-file <code>&lt;filename&gt;</code></strong>: Note that despite the name of this option, this is not a user editable configuration file, but the file where a Redis Cluster node automatically persists the cluster configuration (the state, basically) every time there is a change, in order to be able to re-read it at startup. The file lists things like the other nodes in the cluster, their state, persistent variables, and so forth. Often this file is rewritten and flushed on disk as a result of some message reception.</li>
+<li><strong>cluster-node-timeout <code>&lt;milliseconds&gt;</code></strong>: The maximum amount of time a Redis Cluster node can be unavailable, without it being considered as failing. If a master node is not reachable for more than the specified amount of time, it will be failed over by its replicas. This parameter controls other important things in Redis Cluster. Notably, every node that can't reach the majority of master nodes for the specified amount of time, will stop accepting queries.</li>
+<li><strong>cluster-slave-validity-factor <code>&lt;factor&gt;</code></strong>: If set to zero, a replica will always consider itself valid, and will therefore always try to failover a master, regardless of the amount of time the link between the master and the replica remained disconnected. If the value is positive, a maximum disconnection time is calculated as the <em>node timeout</em> value multiplied by the factor provided with this option, and if the node is a replica, it will not try to start a failover if the master link was disconnected for more than the specified amount of time. For example, if the node timeout is set to 5 seconds and the validity factor is set to 10, a replica disconnected from the master for more than 50 seconds will not try to failover its master. Note that any value different than zero may result in Redis Cluster being unavailable after a master failure if there is no replica that is able to failover it. In that case the cluster will return to being available only when the original master rejoins the cluster.</li>
+<li><strong>cluster-migration-barrier <code>&lt;count&gt;</code></strong>: Minimum number of replicas a master will remain connected with, for another replica to migrate to a master which is no longer covered by any replica. See the appropriate section about replica migration in this tutorial for more information.</li>
+<li><strong>cluster-require-full-coverage <code>&lt;yes/no&gt;</code></strong>: If this is set to yes, as it is by default, the cluster stops accepting writes if some percentage of the key space is not covered by any node. If the option is set to no, the cluster will still serve queries even if only requests about a subset of keys can be processed.</li>
+<li><strong>cluster-allow-reads-when-down <code>&lt;yes/no&gt;</code></strong>: If this is set to no, as it is by default, a node in a Redis Cluster will stop serving all traffic when the cluster is marked as failed, either when a node can't reach a quorum of masters or when full coverage is not met. This prevents reading potentially inconsistent data from a node that is unaware of changes in the cluster. This option can be set to yes to allow reads from a node during the fail state, which is useful for applications that want to prioritize read availability but still want to prevent inconsistent writes. It can also be used for when using Redis Cluster with only one or two shards, as it allows the nodes to continue serving writes when a master fails but automatic failover is impossible.</li>
+</ul>
+<h2 id="create-and-use-a-redis-cluster">Create and use a Redis Cluster<a class="headerlink" href="#create-and-use-a-redis-cluster" title="Permanent link">⚓︎</a></h2>
+<p>To create and use a Redis Cluster, follow these steps:</p>
+<ul>
+<li><a href="#create-a-redis-cluster">Create a Redis Cluster</a></li>
+<li><a href="#interact-with-the-cluster">Interact with the cluster</a></li>
+<li><a href="#write-an-example-app-with-redis-rb-cluster">Write an example app with redis-rb-cluster</a></li>
+<li><a href="#reshard-the-cluster">Reshard the cluster</a></li>
+<li><a href="#a-more-interesting-example-application">A more interesting example application</a></li>
+<li><a href="#test-the-failover">Test the failover</a></li>
+<li><a href="#manual-failover">Manual failover</a></li>
+<li><a href="#add-a-new-node">Add a new node</a></li>
+<li><a href="#remove-a-node">Remove a node</a></li>
+<li><a href="#replica-migration">Replica migration</a></li>
+<li><a href="#upgrade-nodes-in-a-redis-cluster">Upgrade nodes in a Redis Cluster</a></li>
+<li><a href="#migrate-to-redis-cluster">Migrate to Redis Cluster</a></li>
+</ul>
+<p>But, first, familiarize yourself with the requirements for creating a cluster.</p>
+<h4 id="requirements-to-create-a-redis-cluster">Requirements to create a Redis Cluster<a class="headerlink" href="#requirements-to-create-a-redis-cluster" title="Permanent link">⚓︎</a></h4>
+<p>To create a cluster, the first thing you need is to have a few empty Redis instances running in <em>cluster mode</em>. </p>
+<p>At minimum, set the following directives in the <code>redis.conf</code> file:</p>
+<div class="highlight"><pre><span></span><code>port 7000
+cluster-enabled yes
+cluster-config-file nodes.conf
+cluster-node-timeout 5000
+appendonly yes
+</code></pre></div>
+<p>To enable cluster mode, set the <code>cluster-enabled</code> directive to <code>yes</code>.
+Every instance also contains the path of a file where the
+configuration for this node is stored, which by default is <code>nodes.conf</code>.
+This file is never touched by humans; it is simply generated at startup
+by the Redis Cluster instances, and updated every time it is needed.</p>
+<p>Note that the <strong>minimal cluster</strong> that works as expected must contain
+at least three master nodes. For deployment, we strongly recommend
+a six-node cluster, with three masters and three replicas.</p>
+<p>You can test this locally by creating the following directories named
+after the port number of the instance you'll run inside any given directory.</p>
+<p>For example:</p>
+<div class="highlight"><pre><span></span><code>mkdir cluster-test
+cd cluster-test
+mkdir 7000 7001 7002 7003 7004 7005
+</code></pre></div>
+<p>Create a <code>redis.conf</code> file inside each of the directories, from 7000 to 7005.
+As a template for your configuration file just use the small example above,
+but make sure to replace the port number <code>7000</code> with the right port number
+according to the directory name.</p>
+<p>You can start each instance as follows, each running in a separate terminal tab:</p>
+<p><div class="highlight"><pre><span></span><code>cd 7000
+redis-server ./redis.conf
+</code></pre></div>
+You'll see from the logs that every node assigns itself a new ID:</p>
+<div class="highlight"><pre><span></span><code>[82462] 26 Nov 11:56:55.329 * No cluster configuration found, I&#39;m 97a3a64667477371c4479320d683e4c8db5858b1
+</code></pre></div>
+<p>This ID will be used forever by this specific instance in order for the instance
+to have a unique name in the context of the cluster. Every node
+remembers every other node using this IDs, and not by IP or port.
+IP addresses and ports may change, but the unique node identifier will never
+change for all the life of the node. We call this identifier simply <strong>Node ID</strong>.</p>
+<h4 id="create-a-redis-cluster">Create a Redis Cluster<a class="headerlink" href="#create-a-redis-cluster" title="Permanent link">⚓︎</a></h4>
+<p>Now that we have a number of instances running, you need to create your cluster by writing some meaningful configuration to the nodes.</p>
+<p>You can configure and execute individual instances manually or use the create-cluster script.
+Let's go over how you do it manually.</p>
+<p>To create the cluster, run:</p>
+<div class="highlight"><pre><span></span><code>redis-cli --cluster create 127.0.0.1:7000 127.0.0.1:7001 \
+127.0.0.1:7002 127.0.0.1:7003 127.0.0.1:7004 127.0.0.1:7005 \
+--cluster-replicas 1
+</code></pre></div>
+<p>The command used here is <strong>create</strong>, since we want to create a new cluster.
+The option <code>--cluster-replicas 1</code> means that we want a replica for every master created.</p>
+<p>The other arguments are the list of addresses of the instances I want to use
+to create the new cluster.</p>
+<p><code>redis-cli</code> will propose a configuration. Accept the proposed configuration by typing <strong>yes</strong>.
+The cluster will be configured and <em>joined</em>, which means that instances will be
+bootstrapped into talking with each other. Finally, if everything has gone well, you'll see a message like this:</p>
+<div class="highlight"><pre><span></span><code>[OK] All 16384 slots covered
+</code></pre></div>
+<p>This means that there is at least one master instance serving each of the
+16384 available slots.</p>
+<p>If you don't want to create a Redis Cluster by configuring and executing
+individual instances manually as explained above, there is a much simpler
+system (but you'll not learn the same amount of operational details).</p>
+<p>Find the <code>utils/create-cluster</code> directory in the Redis distribution.
+There is a script called <code>create-cluster</code> inside (same name as the directory
+it is contained into), it's a simple bash script. In order to start
+a 6 nodes cluster with 3 masters and 3 replicas just type the following
+commands:</p>
+<ol>
+<li><code>create-cluster start</code></li>
+<li><code>create-cluster create</code></li>
+</ol>
+<p>Reply to <code>yes</code> in step 2 when the <code>redis-cli</code> utility wants you to accept
+the cluster layout.</p>
+<p>You can now interact with the cluster, the first node will start at port 30001
+by default. When you are done, stop the cluster with:</p>
+<ol>
+<li><code>create-cluster stop</code></li>
+</ol>
+<p>Please read the <code>README</code> inside this directory for more information on how
+to run the script.</p>
+<h4 id="interact-with-the-cluster">Interact with the cluster<a class="headerlink" href="#interact-with-the-cluster" title="Permanent link">⚓︎</a></h4>
+<p>To connect to Redis Cluster, you'll need a cluster-aware Redis client. 
+See the <a href="/docs/clients">documentation</a> for your client of choice to determine its cluster support.</p>
+<p>You can also test your Redis Cluster using the <code>redis-cli</code> command line utility:</p>
+<div class="highlight"><pre><span></span><code>$ redis-cli -c -p 7000
+redis 127.0.0.1:7000&gt; set foo bar
+-&gt; Redirected to slot [12182] located at 127.0.0.1:7002
+OK
+redis 127.0.0.1:7002&gt; set hello world
+-&gt; Redirected to slot [866] located at 127.0.0.1:7000
+OK
+redis 127.0.0.1:7000&gt; get foo
+-&gt; Redirected to slot [12182] located at 127.0.0.1:7002
+&quot;bar&quot;
+redis 127.0.0.1:7002&gt; get hello
+-&gt; Redirected to slot [866] located at 127.0.0.1:7000
+&quot;world&quot;
+</code></pre></div>
+<p>{{% alert title="Note" color="info" %}} 
+If you created the cluster using the script, your nodes may listen
+on different ports, starting from 30001 by default.
+{{% /alert %}}</p>
+<p>The <code>redis-cli</code> cluster support is very basic, so it always uses the fact that
+Redis Cluster nodes are able to redirect a client to the right node.
+A serious client is able to do better than that, and cache the map between
+hash slots and nodes addresses, to directly use the right connection to the
+right node. The map is refreshed only when something changed in the cluster
+configuration, for example after a failover or after the system administrator
+changed the cluster layout by adding or removing nodes.</p>
+<h4 id="write-an-example-app-with-redis-rb-cluster">Write an example app with redis-rb-cluster<a class="headerlink" href="#write-an-example-app-with-redis-rb-cluster" title="Permanent link">⚓︎</a></h4>
+<p>Before going forward showing how to operate the Redis Cluster, doing things
+like a failover, or a resharding, we need to create some example application
+or at least to be able to understand the semantics of a simple Redis Cluster
+client interaction.</p>
+<p>In this way we can run an example and at the same time try to make nodes
+failing, or start a resharding, to see how Redis Cluster behaves under real
+world conditions. It is not very helpful to see what happens while nobody
+is writing to the cluster.</p>
+<p>This section explains some basic usage of
+<a href="https://github.com/antirez/redis-rb-cluster">redis-rb-cluster</a> showing two
+examples. 
+The first is the following, and is the
+<a href="https://github.com/antirez/redis-rb-cluster/blob/master/example.rb"><code>example.rb</code></a>
+file inside the redis-rb-cluster distribution:</p>
+<div class="highlight"><pre><span></span><code>   1  require &#39;./cluster&#39;
+   2
+   3  if ARGV.length != 2
+   4      startup_nodes = [
+   5          {:host =&gt; &quot;127.0.0.1&quot;, :port =&gt; 7000},
+   6          {:host =&gt; &quot;127.0.0.1&quot;, :port =&gt; 7001}
+   7      ]
+   8  else
+   9      startup_nodes = [
+  10          {:host =&gt; ARGV[0], :port =&gt; ARGV[1].to_i}
+  11      ]
+  12  end
+  13
+  14  rc = RedisCluster.new(startup_nodes,32,:timeout =&gt; 0.1)
+  15
+  16  last = false
+  17
+  18  while not last
+  19      begin
+  20          last = rc.get(&quot;__last__&quot;)
+  21          last = 0 if !last
+  22      rescue =&gt; e
+  23          puts &quot;error #{e.to_s}&quot;
+  24          sleep 1
+  25      end
+  26  end
+  27
+  28  ((last.to_i+1)..1000000000).each{|x|
+  29      begin
+  30          rc.set(&quot;foo#{x}&quot;,x)
+  31          puts rc.get(&quot;foo#{x}&quot;)
+  32          rc.set(&quot;__last__&quot;,x)
+  33      rescue =&gt; e
+  34          puts &quot;error #{e.to_s}&quot;
+  35      end
+  36      sleep 0.1
+  37  }
+</code></pre></div>
+<p>The application does a very simple thing, it sets keys in the form <code>foo&lt;number&gt;</code> to <code>number</code>, one after the other. So if you run the program the result is the
+following stream of commands:</p>
+<ul>
+<li>SET foo0 0</li>
+<li>SET foo1 1</li>
+<li>SET foo2 2</li>
+<li>And so forth...</li>
+</ul>
+<p>The program looks more complex than it should usually as it is designed to
+show errors on the screen instead of exiting with an exception, so every
+operation performed with the cluster is wrapped by <code>begin</code> <code>rescue</code> blocks.</p>
+<p>The <strong>line 14</strong> is the first interesting line in the program. It creates the
+Redis Cluster object, using as argument a list of <em>startup nodes</em>, the maximum
+number of connections this object is allowed to take against different nodes,
+and finally the timeout after a given operation is considered to be failed.</p>
+<p>The startup nodes don't need to be all the nodes of the cluster. The important
+thing is that at least one node is reachable. Also note that redis-rb-cluster
+updates this list of startup nodes as soon as it is able to connect with the
+first node. You should expect such a behavior with any other serious client.</p>
+<p>Now that we have the Redis Cluster object instance stored in the <strong>rc</strong> variable,
+we are ready to use the object like if it was a normal Redis object instance.</p>
+<p>This is exactly what happens in <strong>line 18 to 26</strong>: when we restart the example
+we don't want to start again with <code>foo0</code>, so we store the counter inside
+Redis itself. The code above is designed to read this counter, or if the
+counter does not exist, to assign it the value of zero.</p>
+<p>However note how it is a while loop, as we want to try again and again even
+if the cluster is down and is returning errors. Normal applications don't need
+to be so careful.</p>
+<p><strong>Lines between 28 and 37</strong> start the main loop where the keys are set or
+an error is displayed.</p>
+<p>Note the <code>sleep</code> call at the end of the loop. In your tests you can remove
+the sleep if you want to write to the cluster as fast as possible (relatively
+to the fact that this is a busy loop without real parallelism of course, so
+you'll get the usually 10k ops/second in the best of the conditions).</p>
+<p>Normally writes are slowed down in order for the example application to be
+easier to follow by humans.</p>
+<p>Starting the application produces the following output:</p>
+<div class="highlight"><pre><span></span><code>ruby ./example.rb
+1
+2
+3
+4
+5
+6
+7
+8
+9
+^C (I stopped the program here)
+</code></pre></div>
+<p>This is not a very interesting program and we'll use a better one in a moment
+but we can already see what happens during a resharding when the program
+is running.</p>
+<h4 id="reshard-the-cluster">Reshard the cluster<a class="headerlink" href="#reshard-the-cluster" title="Permanent link">⚓︎</a></h4>
+<p>Now we are ready to try a cluster resharding. To do this, please
+keep the example.rb program running, so that you can see if there is some
+impact on the program running. Also, you may want to comment the <code>sleep</code>
+call to have some more serious write load during resharding.</p>
+<p>Resharding basically means to move hash slots from a set of nodes to another
+set of nodes. 
+Like cluster creation, it is accomplished using the redis-cli utility.</p>
+<p>To start a resharding, just type:</p>
+<div class="highlight"><pre><span></span><code>redis-cli --cluster reshard 127.0.0.1:7000
+</code></pre></div>
+<p>You only need to specify a single node, redis-cli will find the other nodes
+automatically.</p>
+<p>Currently redis-cli is only able to reshard with the administrator support,
+you can't just say move 5% of slots from this node to the other one (but
+this is pretty trivial to implement). So it starts with questions. The first
+is how much of a resharding do you want to do:</p>
+<div class="highlight"><pre><span></span><code>How many slots do you want to move (from 1 to 16384)?
+</code></pre></div>
+<p>We can try to reshard 1000 hash slots, that should already contain a non
+trivial amount of keys if the example is still running without the sleep
+call.</p>
+<p>Then redis-cli needs to know what is the target of the resharding, that is,
+the node that will receive the hash slots.
+I'll use the first master node, that is, 127.0.0.1:7000, but I need
+to specify the Node ID of the instance. This was already printed in a
+list by redis-cli, but I can always find the ID of a node with the following
+command if I need:</p>
+<div class="highlight"><pre><span></span><code>$ redis-cli -p 7000 cluster nodes | grep myself
+97a3a64667477371c4479320d683e4c8db5858b1 :0 myself,master - 0 0 0 connected 0-5460
+</code></pre></div>
+<p>Ok so my target node is 97a3a64667477371c4479320d683e4c8db5858b1.</p>
+<p>Now you'll get asked from what nodes you want to take those keys.
+I'll just type <code>all</code> in order to take a bit of hash slots from all the
+other master nodes.</p>
+<p>After the final confirmation you'll see a message for every slot that
+redis-cli is going to move from a node to another, and a dot will be printed
+for every actual key moved from one side to the other.</p>
+<p>While the resharding is in progress you should be able to see your
+example program running unaffected. You can stop and restart it multiple times
+during the resharding if you want.</p>
+<p>At the end of the resharding, you can test the health of the cluster with
+the following command:</p>
+<div class="highlight"><pre><span></span><code>redis-cli --cluster check 127.0.0.1:7000
+</code></pre></div>
+<p>All the slots will be covered as usual, but this time the master at
+127.0.0.1:7000 will have more hash slots, something around 6461.</p>
+<p>Resharding can be performed automatically without the need to manually
+enter the parameters in an interactive way. This is possible using a command
+line like the following:</p>
+<div class="highlight"><pre><span></span><code>redis-cli --cluster reshard &lt;host&gt;:&lt;port&gt; --cluster-from &lt;node-id&gt; --cluster-to &lt;node-id&gt; --cluster-slots &lt;number of slots&gt; --cluster-yes
+</code></pre></div>
+<p>This allows to build some automatism if you are likely to reshard often,
+however currently there is no way for <code>redis-cli</code> to automatically
+rebalance the cluster checking the distribution of keys across the cluster
+nodes and intelligently moving slots as needed. This feature will be added
+in the future.</p>
+<p>The <code>--cluster-yes</code> option instructs the cluster manager to automatically answer
+"yes" to the command's prompts, allowing it to run in a non-interactive mode.
+Note that this option can also be activated by setting the
+<code>REDISCLI_CLUSTER_YES</code> environment variable.</p>
+<h4 id="a-more-interesting-example-application">A more interesting example application<a class="headerlink" href="#a-more-interesting-example-application" title="Permanent link">⚓︎</a></h4>
+<p>The example application we wrote early is not very good.
+It writes to the cluster in a simple way without even checking if what was
+written is the right thing.</p>
+<p>From our point of view the cluster receiving the writes could just always
+write the key <code>foo</code> to <code>42</code> to every operation, and we would not notice at
+all.</p>
+<p>So in the <code>redis-rb-cluster</code> repository, there is a more interesting application
+that is called <code>consistency-test.rb</code>. It uses a set of counters, by default 1000, and sends <code>INCR</code> commands in order to increment the counters.</p>
+<p>However instead of just writing, the application does two additional things:</p>
+<ul>
+<li>When a counter is updated using <code>INCR</code>, the application remembers the write.</li>
+<li>It also reads a random counter before every write, and check if the value is what we expected it to be, comparing it with the value it has in memory.</li>
+</ul>
+<p>What this means is that this application is a simple <strong>consistency checker</strong>,
+and is able to tell you if the cluster lost some write, or if it accepted
+a write that we did not receive acknowledgment for. In the first case we'll
+see a counter having a value that is smaller than the one we remember, while
+in the second case the value will be greater.</p>
+<p>Running the consistency-test application produces a line of output every
+second:</p>
+<div class="highlight"><pre><span></span><code>$ ruby consistency-test.rb
+925 R (0 err) | 925 W (0 err) |
+5030 R (0 err) | 5030 W (0 err) |
+9261 R (0 err) | 9261 W (0 err) |
+13517 R (0 err) | 13517 W (0 err) |
+17780 R (0 err) | 17780 W (0 err) |
+22025 R (0 err) | 22025 W (0 err) |
+25818 R (0 err) | 25818 W (0 err) |
+</code></pre></div>
+<p>The line shows the number of <strong>R</strong>eads and <strong>W</strong>rites performed, and the
+number of errors (query not accepted because of errors since the system was
+not available).</p>
+<p>If some inconsistency is found, new lines are added to the output.
+This is what happens, for example, if I reset a counter manually while
+the program is running:</p>
+<div class="highlight"><pre><span></span><code>$ redis-cli -h 127.0.0.1 -p 7000 set key_217 0
+OK
+
+(in the other tab I see...)
+
+94774 R (0 err) | 94774 W (0 err) |
+98821 R (0 err) | 98821 W (0 err) |
+102886 R (0 err) | 102886 W (0 err) | 114 lost |
+107046 R (0 err) | 107046 W (0 err) | 114 lost |
+</code></pre></div>
+<p>When I set the counter to 0 the real value was 114, so the program reports
+114 lost writes (<code>INCR</code> commands that are not remembered by the cluster).</p>
+<p>This program is much more interesting as a test case, so we'll use it
+to test the Redis Cluster failover.</p>
+<h4 id="test-the-failover">Test the failover<a class="headerlink" href="#test-the-failover" title="Permanent link">⚓︎</a></h4>
+<p>To trigger the failover, the simplest thing we can do (that is also
+the semantically simplest failure that can occur in a distributed system)
+is to crash a single process, in our case a single master.</p>
+<p>{{% alert title="Note" color="info" %}} 
+During this test, you should take a tab open with the consistency test
+application running.
+{{% /alert %}} </p>
+<p>We can identify a master and crash it with the following command:</p>
+<div class="highlight"><pre><span></span><code>$ redis-cli -p 7000 cluster nodes | grep master
+3e3a6cb0d9a9a87168e266b0a0b24026c0aae3f0 127.0.0.1:7001 master - 0 1385482984082 0 connected 5960-10921
+2938205e12de373867bf38f1ca29d31d0ddb3e46 127.0.0.1:7002 master - 0 1385482983582 0 connected 11423-16383
+97a3a64667477371c4479320d683e4c8db5858b1 :0 myself,master - 0 0 0 connected 0-5959 10922-11422
+</code></pre></div>
+<p>Ok, so 7000, 7001, and 7002 are masters. Let's crash node 7002 with the
+<strong>DEBUG SEGFAULT</strong> command:</p>
+<div class="highlight"><pre><span></span><code>$ redis-cli -p 7002 debug segfault
+Error: Server closed the connection
+</code></pre></div>
+<p>Now we can look at the output of the consistency test to see what it reported.</p>
+<div class="highlight"><pre><span></span><code>18849 R (0 err) | 18849 W (0 err) |
+23151 R (0 err) | 23151 W (0 err) |
+27302 R (0 err) | 27302 W (0 err) |
+
+... many error warnings here ...
+
+29659 R (578 err) | 29660 W (577 err) |
+33749 R (578 err) | 33750 W (577 err) |
+37918 R (578 err) | 37919 W (577 err) |
+42077 R (578 err) | 42078 W (577 err) |
+</code></pre></div>
+<p>As you can see during the failover the system was not able to accept 578 reads and 577 writes, however no inconsistency was created in the database. This may
+sound unexpected as in the first part of this tutorial we stated that Redis
+Cluster can lose writes during the failover because it uses asynchronous
+replication. What we did not say is that this is not very likely to happen
+because Redis sends the reply to the client, and the commands to replicate
+to the replicas, about at the same time, so there is a very small window to
+lose data. However the fact that it is hard to trigger does not mean that it
+is impossible, so this does not change the consistency guarantees provided
+by Redis cluster.</p>
+<p>We can now check what is the cluster setup after the failover (note that
+in the meantime I restarted the crashed instance so that it rejoins the
+cluster as a replica):</p>
+<div class="highlight"><pre><span></span><code>$ redis-cli -p 7000 cluster nodes
+3fc783611028b1707fd65345e763befb36454d73 127.0.0.1:7004 slave 3e3a6cb0d9a9a87168e266b0a0b24026c0aae3f0 0 1385503418521 0 connected
+a211e242fc6b22a9427fed61285e85892fa04e08 127.0.0.1:7003 slave 97a3a64667477371c4479320d683e4c8db5858b1 0 1385503419023 0 connected
+97a3a64667477371c4479320d683e4c8db5858b1 :0 myself,master - 0 0 0 connected 0-5959 10922-11422
+3c3a0c74aae0b56170ccb03a76b60cfe7dc1912e 127.0.0.1:7005 master - 0 1385503419023 3 connected 11423-16383
+3e3a6cb0d9a9a87168e266b0a0b24026c0aae3f0 127.0.0.1:7001 master - 0 1385503417005 0 connected 5960-10921
+2938205e12de373867bf38f1ca29d31d0ddb3e46 127.0.0.1:7002 slave 3c3a0c74aae0b56170ccb03a76b60cfe7dc1912e 0 1385503418016 3 connected
+</code></pre></div>
+<p>Now the masters are running on ports 7000, 7001 and 7005. What was previously
+a master, that is the Redis instance running on port 7002, is now a replica of
+7005.</p>
+<p>The output of the <code>CLUSTER NODES</code> command may look intimidating, but it is actually pretty simple, and is composed of the following tokens:</p>
+<ul>
+<li>Node ID</li>
+<li>ip:port</li>
+<li>flags: master, replica, myself, fail, ...</li>
+<li>if it is a replica, the Node ID of the master</li>
+<li>Time of the last pending PING still waiting for a reply.</li>
+<li>Time of the last PONG received.</li>
+<li>Configuration epoch for this node (see the Cluster specification).</li>
+<li>Status of the link to this node.</li>
+<li>Slots served...</li>
+</ul>
+<h4 id="manual-failover">Manual failover<a class="headerlink" href="#manual-failover" title="Permanent link">⚓︎</a></h4>
+<p>Sometimes it is useful to force a failover without actually causing any problem
+on a master. For example, to upgrade the Redis process of one of the
+master nodes it is a good idea to failover it to turn it into a replica
+with minimal impact on availability.</p>
+<p>Manual failovers are supported by Redis Cluster using the <code>CLUSTER FAILOVER</code>
+command, that must be executed in one of the replicas of the master you want
+to failover.</p>
+<p>Manual failovers are special and are safer compared to failovers resulting from
+actual master failures. They occur in a way that avoids data loss in the
+process, by switching clients from the original master to the new master only
+when the system is sure that the new master processed all the replication stream
+from the old one.</p>
+<p>This is what you see in the replica log when you perform a manual failover:</p>
+<div class="highlight"><pre><span></span><code># Manual failover user request accepted.
+# Received replication offset for paused master manual failover: 347540
+# All master replication stream processed, manual failover can start.
+# Start of election delayed for 0 milliseconds (rank #0, offset 347540).
+# Starting a failover election for epoch 7545.
+# Failover election won: I&#39;m the new master.
+</code></pre></div>
+<p>Basically clients connected to the master we are failing over are stopped.
+At the same time the master sends its replication offset to the replica, that
+waits to reach the offset on its side. When the replication offset is reached,
+the failover starts, and the old master is informed about the configuration
+switch. When the clients are unblocked on the old master, they are redirected
+to the new master.</p>
+<p>{{% alert title="Note" color="info" %}} 
+To promote a replica to master, it must first be known as a replica by a majority of the masters in the cluster.
+  Otherwise, it cannot win the failover election.
+  If the replica has just been added to the cluster (see <a href="#add-a-new-node-as-a-replica">Add a new node as a replica</a>), you may need to wait a while before sending the <code>CLUSTER FAILOVER</code> command, to make sure the masters in cluster are aware of the new replica.
+{{% /alert %}} </p>
+<h4 id="add-a-new-node">Add a new node<a class="headerlink" href="#add-a-new-node" title="Permanent link">⚓︎</a></h4>
+<p>Adding a new node is basically the process of adding an empty node and then
+moving some data into it, in case it is a new master, or telling it to
+setup as a replica of a known node, in case it is a replica.</p>
+<p>We'll show both, starting with the addition of a new master instance.</p>
+<p>In both cases the first step to perform is <strong>adding an empty node</strong>.</p>
+<p>This is as simple as to start a new node in port 7006 (we already used
+from 7000 to 7005 for our existing 6 nodes) with the same configuration
+used for the other nodes, except for the port number, so what you should
+do in order to conform with the setup we used for the previous nodes:</p>
+<ul>
+<li>Create a new tab in your terminal application.</li>
+<li>Enter the <code>cluster-test</code> directory.</li>
+<li>Create a directory named <code>7006</code>.</li>
+<li>Create a redis.conf file inside, similar to the one used for the other nodes but using 7006 as port number.</li>
+<li>Finally start the server with <code>../redis-server ./redis.conf</code></li>
+</ul>
+<p>At this point the server should be running.</p>
+<p>Now we can use <strong>redis-cli</strong> as usual in order to add the node to
+the existing cluster.</p>
+<div class="highlight"><pre><span></span><code>redis-cli --cluster add-node 127.0.0.1:7006 127.0.0.1:7000
+</code></pre></div>
+<p>As you can see I used the <strong>add-node</strong> command specifying the address of the
+new node as first argument, and the address of a random existing node in the
+cluster as second argument.</p>
+<p>In practical terms redis-cli here did very little to help us, it just
+sent a <code>CLUSTER MEET</code> message to the node, something that is also possible
+to accomplish manually. However redis-cli also checks the state of the
+cluster before to operate, so it is a good idea to perform cluster operations
+always via redis-cli even when you know how the internals work.</p>
+<p>Now we can connect to the new node to see if it really joined the cluster:</p>
+<div class="highlight"><pre><span></span><code>redis 127.0.0.1:7006&gt; cluster nodes
+3e3a6cb0d9a9a87168e266b0a0b24026c0aae3f0 127.0.0.1:7001 master - 0 1385543178575 0 connected 5960-10921
+3fc783611028b1707fd65345e763befb36454d73 127.0.0.1:7004 slave 3e3a6cb0d9a9a87168e266b0a0b24026c0aae3f0 0 1385543179583 0 connected
+f093c80dde814da99c5cf72a7dd01590792b783b :0 myself,master - 0 0 0 connected
+2938205e12de373867bf38f1ca29d31d0ddb3e46 127.0.0.1:7002 slave 3c3a0c74aae0b56170ccb03a76b60cfe7dc1912e 0 1385543178072 3 connected
+a211e242fc6b22a9427fed61285e85892fa04e08 127.0.0.1:7003 slave 97a3a64667477371c4479320d683e4c8db5858b1 0 1385543178575 0 connected
+97a3a64667477371c4479320d683e4c8db5858b1 127.0.0.1:7000 master - 0 1385543179080 0 connected 0-5959 10922-11422
+3c3a0c74aae0b56170ccb03a76b60cfe7dc1912e 127.0.0.1:7005 master - 0 1385543177568 3 connected 11423-16383
+</code></pre></div>
+<p>Note that since this node is already connected to the cluster it is already
+able to redirect client queries correctly and is generally speaking part of
+the cluster. However it has two peculiarities compared to the other masters:</p>
+<ul>
+<li>It holds no data as it has no assigned hash slots.</li>
+<li>Because it is a master without assigned slots, it does not participate in the election process when a replica wants to become a master.</li>
+</ul>
+<p>Now it is possible to assign hash slots to this node using the resharding
+feature of <code>redis-cli</code>. 
+It is basically useless to show this as we already
+did in a previous section, there is no difference, it is just a resharding
+having as a target the empty node.</p>
+<h5 id="add-a-new-node-as-a-replica">Add a new node as a replica<a class="headerlink" href="#add-a-new-node-as-a-replica" title="Permanent link">⚓︎</a></h5>
+<p>Adding a new replica can be performed in two ways. The obvious one is to
+use redis-cli again, but with the --cluster-slave option, like this:</p>
+<div class="highlight"><pre><span></span><code>redis-cli --cluster add-node 127.0.0.1:7006 127.0.0.1:7000 --cluster-slave
+</code></pre></div>
+<p>Note that the command line here is exactly like the one we used to add
+a new master, so we are not specifying to which master we want to add
+the replica. In this case, what happens is that redis-cli will add the new
+node as replica of a random master among the masters with fewer replicas.</p>
+<p>However you can specify exactly what master you want to target with your
+new replica with the following command line:</p>
+<div class="highlight"><pre><span></span><code>redis-cli --cluster add-node 127.0.0.1:7006 127.0.0.1:7000 --cluster-slave --cluster-master-id 3c3a0c74aae0b56170ccb03a76b60cfe7dc1912e
+</code></pre></div>
+<p>This way we assign the new replica to a specific master.</p>
+<p>A more manual way to add a replica to a specific master is to add the new
+node as an empty master, and then turn it into a replica using the
+<code>CLUSTER REPLICATE</code> command. This also works if the node was added as a replica
+but you want to move it as a replica of a different master.</p>
+<p>For example in order to add a replica for the node 127.0.0.1:7005 that is
+currently serving hash slots in the range 11423-16383, that has a Node ID
+3c3a0c74aae0b56170ccb03a76b60cfe7dc1912e, all I need to do is to connect
+with the new node (already added as empty master) and send the command:</p>
+<div class="highlight"><pre><span></span><code>redis 127.0.0.1:7006&gt; cluster replicate 3c3a0c74aae0b56170ccb03a76b60cfe7dc1912e
+</code></pre></div>
+<p>That's it. Now we have a new replica for this set of hash slots, and all
+the other nodes in the cluster already know (after a few seconds needed to
+update their config). We can verify with the following command:</p>
+<div class="highlight"><pre><span></span><code>$ redis-cli -p 7000 cluster nodes | grep slave | grep 3c3a0c74aae0b56170ccb03a76b60cfe7dc1912e
+f093c80dde814da99c5cf72a7dd01590792b783b 127.0.0.1:7006 slave 3c3a0c74aae0b56170ccb03a76b60cfe7dc1912e 0 1385543617702 3 connected
+2938205e12de373867bf38f1ca29d31d0ddb3e46 127.0.0.1:7002 slave 3c3a0c74aae0b56170ccb03a76b60cfe7dc1912e 0 1385543617198 3 connected
+</code></pre></div>
+<p>The node 3c3a0c... now has two replicas, running on ports 7002 (the existing one) and 7006 (the new one).</p>
+<h4 id="remove-a-node">Remove a node<a class="headerlink" href="#remove-a-node" title="Permanent link">⚓︎</a></h4>
+<p>To remove a replica node just use the <code>del-node</code> command of redis-cli:</p>
+<div class="highlight"><pre><span></span><code>redis-cli --cluster del-node 127.0.0.1:7000 `&lt;node-id&gt;`
+</code></pre></div>
+<p>The first argument is just a random node in the cluster, the second argument
+is the ID of the node you want to remove.</p>
+<p>You can remove a master node in the same way as well, <strong>however in order to
+remove a master node it must be empty</strong>. If the master is not empty you need
+to reshard data away from it to all the other master nodes before.</p>
+<p>An alternative to remove a master node is to perform a manual failover of it
+over one of its replicas and remove the node after it turned into a replica of the
+new master. Obviously this does not help when you want to reduce the actual
+number of masters in your cluster, in that case, a resharding is needed.</p>
+<h4 id="replica-migration">Replica migration<a class="headerlink" href="#replica-migration" title="Permanent link">⚓︎</a></h4>
+<p>In Redis Cluster, you can reconfigure a replica to replicate with a
+different master at any time just using this command:</p>
+<div class="highlight"><pre><span></span><code>CLUSTER REPLICATE &lt;master-node-id&gt;
+</code></pre></div>
+<p>However there is a special scenario where you want replicas to move from one
+master to another one automatically, without the help of the system administrator.
+The automatic reconfiguration of replicas is called <em>replicas migration</em> and is
+able to improve the reliability of a Redis Cluster.</p>
+<p>{{% alert title="Note" color="info" %}} 
+You can read the details of replicas migration in the <a href="/topics/cluster-spec">Redis Cluster Specification</a>, here we'll only provide some information about the
+general idea and what you should do in order to benefit from it.
+{{% /alert %}} </p>
+<p>The reason why you may want to let your cluster replicas to move from one master
+to another under certain condition, is that usually the Redis Cluster is as
+resistant to failures as the number of replicas attached to a given master.</p>
+<p>For example a cluster where every master has a single replica can't continue
+operations if the master and its replica fail at the same time, simply because
+there is no other instance to have a copy of the hash slots the master was
+serving. However while net-splits are likely to isolate a number of nodes
+at the same time, many other kind of failures, like hardware or software failures
+local to a single node, are a very notable class of failures that are unlikely
+to happen at the same time, so it is possible that in your cluster where
+every master has a replica, the replica is killed at 4am, and the master is killed
+at 6am. This still will result in a cluster that can no longer operate.</p>
+<p>To improve reliability of the system we have the option to add additional
+replicas to every master, but this is expensive. Replica migration allows to
+add more replicas to just a few masters. So you have 10 masters with 1 replica
+each, for a total of 20 instances. However you add, for example, 3 instances
+more as replicas of some of your masters, so certain masters will have more
+than a single replica.</p>
+<p>With replicas migration what happens is that if a master is left without
+replicas, a replica from a master that has multiple replicas will migrate to
+the <em>orphaned</em> master. So after your replica goes down at 4am as in the example
+we made above, another replica will take its place, and when the master
+will fail as well at 5am, there is still a replica that can be elected so that
+the cluster can continue to operate.</p>
+<p>So what you should know about replicas migration in short?</p>
+<ul>
+<li>The cluster will try to migrate a replica from the master that has the greatest number of replicas in a given moment.</li>
+<li>To benefit from replica migration you have just to add a few more replicas to a single master in your cluster, it does not matter what master.</li>
+<li>There is a configuration parameter that controls the replica migration feature that is called <code>cluster-migration-barrier</code>: you can read more about it in the example <code>redis.conf</code> file provided with Redis Cluster.</li>
+</ul>
+<h4 id="upgrade-nodes-in-a-redis-cluster">Upgrade nodes in a Redis Cluster<a class="headerlink" href="#upgrade-nodes-in-a-redis-cluster" title="Permanent link">⚓︎</a></h4>
+<p>Upgrading replica nodes is easy since you just need to stop the node and restart
+it with an updated version of Redis. If there are clients scaling reads using
+replica nodes, they should be able to reconnect to a different replica if a given
+one is not available.</p>
+<p>Upgrading masters is a bit more complex, and the suggested procedure is:</p>
+<ol>
+<li>Use <code>CLUSTER FAILOVER</code> to trigger a manual failover of the master to one of its replicas.
+   (See the <a href="#manual-failover">Manual failover</a> in this topic.)</li>
+<li>Wait for the master to turn into a replica.</li>
+<li>Finally upgrade the node as you do for replicas.</li>
+<li>If you want the master to be the node you just upgraded, trigger a new manual failover in order to turn back the upgraded node into a master.</li>
+</ol>
+<p>Following this procedure you should upgrade one node after the other until
+all the nodes are upgraded.</p>
+<h4 id="migrate-to-redis-cluster">Migrate to Redis Cluster<a class="headerlink" href="#migrate-to-redis-cluster" title="Permanent link">⚓︎</a></h4>
+<p>Users willing to migrate to Redis Cluster may have just a single master, or
+may already using a preexisting sharding setup, where keys
+are split among N nodes, using some in-house algorithm or a sharding algorithm
+implemented by their client library or Redis proxy.</p>
+<p>In both cases it is possible to migrate to Redis Cluster easily, however
+what is the most important detail is if multiple-keys operations are used
+by the application, and how. There are three different cases:</p>
+<ol>
+<li>Multiple keys operations, or transactions, or Lua scripts involving multiple keys, are not used. Keys are accessed independently (even if accessed via transactions or Lua scripts grouping multiple commands, about the same key, together).</li>
+<li>Multiple keys operations, or transactions, or Lua scripts involving multiple keys are used but only with keys having the same <strong>hash tag</strong>, which means that the keys used together all have a <code>{...}</code> sub-string that happens to be identical. For example the following multiple keys operation is defined in the context of the same hash tag: <code>SUNION {user:1000}.foo {user:1000}.bar</code>.</li>
+<li>Multiple keys operations, or transactions, or Lua scripts involving multiple keys are used with key names not having an explicit, or the same, hash tag.</li>
+</ol>
+<p>The third case is not handled by Redis Cluster: the application requires to
+be modified in order to not use multi keys operations or only use them in
+the context of the same hash tag.</p>
+<p>Case 1 and 2 are covered, so we'll focus on those two cases, that are handled
+in the same way, so no distinction will be made in the documentation.</p>
+<p>Assuming you have your preexisting data set split into N masters, where
+N=1 if you have no preexisting sharding, the following steps are needed
+in order to migrate your data set to Redis Cluster:</p>
+<ol>
+<li>Stop your clients. No automatic live-migration to Redis Cluster is currently possible. You may be able to do it orchestrating a live migration in the context of your application / environment.</li>
+<li>Generate an append only file for all of your N masters using the <code>BGREWRITEAOF</code> command, and waiting for the AOF file to be completely generated.</li>
+<li>Save your AOF files from aof-1 to aof-N somewhere. At this point you can stop your old instances if you wish (this is useful since in non-virtualized deployments you often need to reuse the same computers).</li>
+<li>Create a Redis Cluster composed of N masters and zero replicas. You'll add replicas later. Make sure all your nodes are using the append only file for persistence.</li>
+<li>Stop all the cluster nodes, substitute their append only file with your pre-existing append only files, aof-1 for the first node, aof-2 for the second node, up to aof-N.</li>
+<li>Restart your Redis Cluster nodes with the new AOF files. They'll complain that there are keys that should not be there according to their configuration.</li>
+<li>Use <code>redis-cli --cluster fix</code> command in order to fix the cluster so that keys will be migrated according to the hash slots each node is authoritative or not.</li>
+<li>Use <code>redis-cli --cluster check</code> at the end to make sure your cluster is ok.</li>
+<li>Restart your clients modified to use a Redis Cluster aware client library.</li>
+</ol>
+<p>There is an alternative way to import data from external instances to a Redis
+Cluster, which is to use the <code>redis-cli --cluster import</code> command.</p>
+<p>The command moves all the keys of a running instance (deleting the keys from
+the source instance) to the specified pre-existing Redis Cluster. However
+note that if you use a Redis 2.8 instance as source instance the operation
+may be slow since 2.8 does not implement migrate connection caching, so you
+may want to restart your source instance with a Redis 3.x version before
+to perform such operation.</p>
+<p>{{% alert title="Note" color="info" %}} 
+Starting with Redis 5, if not for backward compatibility, the Redis project no longer uses the word slave. Unfortunately in this command the word slave is part of the protocol, so we'll be able to remove such occurrences only when this API will be naturally deprecated.
+{{% /alert %}} </p>
+<h2 id="learn-more">Learn more<a class="headerlink" href="#learn-more" title="Permanent link">⚓︎</a></h2>
+<ul>
+<li><a href="/topics/cluster-spec">Redis Cluster specification</a></li>
+<li><a href="https://redis.com/redis-enterprise/technology/linear-scaling-redis-enterprise/">Linear Scaling with Redis Enterprise</a></li>
+<li><a href="https://docs.docker.com/engine/userguide/networking/dockernetworks/">Docker documentation</a></li>
+</ul>
+
+  <hr>
+<div class="md-source-file">
+  <small>
+    
+      最后更新:
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 25, 2023</span>
+      
+        <br>
+        创建日期:
+        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 25, 2023</span>
+      
+    
+  </small>
+</div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../replication/" class="md-footer__link md-footer__link--prev" aria-label="上一页: Redis replication">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                Redis replication
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../sentinel/" class="md-footer__link md-footer__link--next" aria-label="下一页: High availability with Redis Sentinel">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                High availability with Redis Sentinel
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2023 Ean Yang
+    </div>
+  
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/YQisme" target="_blank" rel="noopener" title="github主页" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://space.bilibili.com/244185393?spm_id_from=333.788.0.0" target="_blank" rel="noopener" title="b站主页" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M488.6 104.1c16.7 18.1 24.4 39.7 23.3 65.7v202.4c-.4 26.4-9.2 48.1-26.5 65.1-17.2 17-39.1 25.9-65.5 26.7H92.02c-26.45-.8-48.21-9.8-65.28-27.2C9.682 419.4.767 396.5 0 368.2V169.8c.767-26 9.682-47.6 26.74-65.7C43.81 87.75 65.57 78.77 92.02 78h29.38L96.05 52.19c-5.75-5.73-8.63-13-8.63-21.79 0-8.8 2.88-16.06 8.63-21.797C101.8 2.868 109.1 0 117.9 0s16.1 2.868 21.9 8.603L213.1 78h88l74.5-69.397C381.7 2.868 389.2 0 398 0c8.8 0 16.1 2.868 21.9 8.603 5.7 5.737 8.6 12.997 8.6 21.797 0 8.79-2.9 16.06-8.6 21.79L394.6 78h29.3c26.4.77 48 9.75 64.7 26.1zm-38.8 69.7c-.4-9.6-3.7-17.4-10.7-23.5-5.2-6.1-14-9.4-22.7-9.8H96.05c-9.59.4-17.45 3.7-23.58 9.8-6.14 6.1-9.4 13.9-9.78 23.5v194.4c0 9.2 3.26 17 9.78 23.5s14.38 9.8 23.58 9.8H416.4c9.2 0 17-3.3 23.3-9.8 6.3-6.5 9.7-14.3 10.1-23.5V173.8zm-264.3 42.7c6.3 6.3 9.7 14.1 10.1 23.2V273c-.4 9.2-3.7 16.9-9.8 23.2-6.2 6.3-14 9.5-23.6 9.5-9.6 0-17.5-3.2-23.6-9.5-6.1-6.3-9.4-14-9.8-23.2v-33.3c.4-9.1 3.8-16.9 10.1-23.2 6.3-6.3 13.2-9.6 23.3-10 9.2.4 17 3.7 23.3 10zm191.5 0c6.3 6.3 9.7 14.1 10.1 23.2V273c-.4 9.2-3.7 16.9-9.8 23.2-6.1 6.3-14 9.5-23.6 9.5-9.6 0-17.4-3.2-23.6-9.5-7-6.3-9.4-14-9.7-23.2v-33.3c.3-9.1 3.7-16.9 10-23.2 6.3-6.3 14.1-9.6 23.3-10 9.2.4 17 3.7 23.3 10z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://eanyang7.com" target="_blank" rel="noopener" title="个人主页" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M112 48a48 48 0 1 1 96 0 48 48 0 1 1-96 0zm40 304v128c0 17.7-14.3 32-32 32s-32-14.3-32-32V256.9l-28.6 47.6c-9.1 15.1-28.8 20-43.9 10.9s-20-28.8-10.9-43.9l58.3-97c17.4-28.9 48.6-46.6 82.3-46.6h29.7c33.7 0 64.9 17.7 82.3 46.6l58.3 97c9.1 15.1 4.2 34.8-10.9 43.9s-34.8 4.2-43.9-10.9L232 256.9V480c0 17.7-14.3 32-32 32s-32-14.3-32-32V352h-16z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.tracking", "navigation.prune", "navigation.top", "toc.follow", "header.autohide", "navigation.footer", "search.suggest", "search.highlight", "search.share", "content.action.edit", "content.action.view", "content.code.copy"], "search": "../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.6c14ae12.min.js"></script>
+      
+    
+  </body>
+</html>

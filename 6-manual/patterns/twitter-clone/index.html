@@ -1,0 +1,1732 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Learn several Redis patterns by building a Twitter clone">
+      
+      
+        <meta name="author" content="Ean Yang">
+      
+      
+        <link rel="canonical" href="https://eanyang7.github.io/redis-doc/6-manual/patterns/twitter-clone/">
+      
+      
+        <link rel="prev" href="../distributed-locks/">
+      
+      
+        <link rel="next" href="../indexes/">
+      
+      
+      <link rel="icon" href="../../../assets/favicon.jpg">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.12">
+    
+    
+      
+        <title>Redis patterns example - redis 文档</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.fad675c6.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.356b1318.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="red" data-md-color-accent="deep-purple">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#what-is-a-key-value-store" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../../.." title="redis 文档" class="md-header__button md-logo" aria-label="redis 文档" data-md-component="logo">
+      
+  <img src="../../../assets/logo.jpg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            redis 文档
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Redis patterns example
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="red" data-md-color-accent="deep-purple"  aria-label="切换为暗黑模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="切换为暗黑模式" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5c-.84 0-1.65.15-2.39.42L12 2M3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29L3.34 7m.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14L3.36 17M20.65 7l-1.77 3.79a7.023 7.023 0 0 0-2.38-4.15l4.15.36m-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29L20.64 17M12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44L12 22Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="red"  aria-label="切换为浅色模式"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="切换为浅色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3 3.19.09m3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95 2.06.05m-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="分享" aria-label="分享" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7 0-.24-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91 1.61 0 2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08Z"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/EanYang7/redis-doc" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M186.1 328.7c0 20.9-10.9 55.1-36.7 55.1s-36.7-34.2-36.7-55.1 10.9-55.1 36.7-55.1 36.7 34.2 36.7 55.1zM480 278.2c0 31.9-3.2 65.7-17.5 95-37.9 76.6-142.1 74.8-216.7 74.8-75.8 0-186.2 2.7-225.6-74.8-14.6-29-20.2-63.1-20.2-95 0-41.9 13.9-81.5 41.5-113.6-5.2-15.8-7.7-32.4-7.7-48.8 0-21.5 4.9-32.3 14.6-51.8 45.3 0 74.3 9 108.8 36 29-6.9 58.8-10 88.7-10 27 0 54.2 2.9 80.4 9.2 34-26.7 63-35.2 107.8-35.2 9.8 19.5 14.6 30.3 14.6 51.8 0 16.4-2.6 32.7-7.7 48.2 27.5 32.4 39 72.3 39 114.2zm-64.3 50.5c0-43.9-26.7-82.6-73.5-82.6-18.9 0-37 3.4-56 6-14.9 2.3-29.8 3.2-45.1 3.2-15.2 0-30.1-.9-45.1-3.2-18.7-2.6-37-6-56-6-46.8 0-73.5 38.7-73.5 82.6 0 87.8 80.4 101.3 150.4 101.3h48.2c70.3 0 150.6-13.4 150.6-101.3zm-82.6-55.1c-25.8 0-36.7 34.2-36.7 55.1s10.9 55.1 36.7 55.1 36.7-34.2 36.7-55.1-10.9-55.1-36.7-55.1z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    github仓库
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="redis 文档" class="md-nav__button md-logo" aria-label="redis 文档" data-md-component="logo">
+      
+  <img src="../../../assets/logo.jpg" alt="logo">
+
+    </a>
+    redis 文档
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/EanYang7/redis-doc" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M186.1 328.7c0 20.9-10.9 55.1-36.7 55.1s-36.7-34.2-36.7-55.1 10.9-55.1 36.7-55.1 36.7 34.2 36.7 55.1zM480 278.2c0 31.9-3.2 65.7-17.5 95-37.9 76.6-142.1 74.8-216.7 74.8-75.8 0-186.2 2.7-225.6-74.8-14.6-29-20.2-63.1-20.2-95 0-41.9 13.9-81.5 41.5-113.6-5.2-15.8-7.7-32.4-7.7-48.8 0-21.5 4.9-32.3 14.6-51.8 45.3 0 74.3 9 108.8 36 29-6.9 58.8-10 88.7-10 27 0 54.2 2.9 80.4 9.2 34-26.7 63-35.2 107.8-35.2 9.8 19.5 14.6 30.3 14.6 51.8 0 16.4-2.6 32.7-7.7 48.2 27.5 32.4 39 72.3 39 114.2zm-64.3 50.5c0-43.9-26.7-82.6-73.5-82.6-18.9 0-37 3.4-56 6-14.9 2.3-29.8 3.2-45.1 3.2-15.2 0-30.1-.9-45.1-3.2-18.7-2.6-37-6-56-6-46.8 0-73.5 38.7-73.5 82.6 0 87.8 80.4 101.3 150.4 101.3h48.2c70.3 0 150.6-13.4 150.6-101.3zm-82.6-55.1c-25.8 0-36.7 34.2-36.7 55.1s10.9 55.1 36.7 55.1 36.7-34.2 36.7-55.1-10.9-55.1-36.7-55.1z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    github仓库
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Documentation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../0-about/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    0 about
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../1-get-started/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    1 get started
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../2-install/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    2 install
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../3-connect/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    3 connect
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../4-data-types/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    4 data types
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../5-interact/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    5 interact
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    6 manual
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            6 manual
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../_index/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Use Redis
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../client-side-caching/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Client-side caching in Redis
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../keyspace-notifications/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis keyspace notifications
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../keyspace/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Keyspace
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_8_5" id="__nav_8_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Patterns
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_8_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_8_5">
+            <span class="md-nav__icon md-icon"></span>
+            Patterns
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../_index/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Redis programming patterns
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bulk-loading/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Bulk loading
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../distributed-locks/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Distributed Locks with Redis
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Redis patterns example
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Redis patterns example
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-a-key-value-store" class="md-nav__link">
+    <span class="md-ellipsis">
+      What is a key-value store?
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#atomic-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Atomic operations
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#beyond-key-value-stores-lists" class="md-nav__link">
+    <span class="md-ellipsis">
+      Beyond key-value stores: lists
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-set-data-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      The Set data type
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-sorted-set-data-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      The Sorted Set data type
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-hash-data-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      The Hash data type
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prerequisites
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data layout
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#followers-following-and-updates" class="md-nav__link">
+    <span class="md-ellipsis">
+      Followers, following, and updates
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authentication
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#updates" class="md-nav__link">
+    <span class="md-ellipsis">
+      Updates
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#paginating-updates" class="md-nav__link">
+    <span class="md-ellipsis">
+      Paginating updates
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#following-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      Following users
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#making-it-horizontally-scalable" class="md-nav__link">
+    <span class="md-ellipsis">
+      Making it horizontally scalable
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../indexes/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    Indexes
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../pipelining/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    Pipelining
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../7-management/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    7 management
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+    
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--pruned md-nav__item--nested">
+      
+        
+  
+  
+    <a href="../../../8-reference/_index/" class="md-nav__link">
+      
+  
+  <span class="md-ellipsis">
+    8 reference
+  </span>
+  
+
+      
+        <span class="md-nav__icon md-icon"></span>
+      
+    </a>
+  
+
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-a-key-value-store" class="md-nav__link">
+    <span class="md-ellipsis">
+      What is a key-value store?
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#atomic-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Atomic operations
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#beyond-key-value-stores-lists" class="md-nav__link">
+    <span class="md-ellipsis">
+      Beyond key-value stores: lists
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-set-data-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      The Set data type
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-sorted-set-data-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      The Sorted Set data type
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-hash-data-type" class="md-nav__link">
+    <span class="md-ellipsis">
+      The Hash data type
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    <span class="md-ellipsis">
+      Prerequisites
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data-layout" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data layout
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#followers-following-and-updates" class="md-nav__link">
+    <span class="md-ellipsis">
+      Followers, following, and updates
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authentication
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#updates" class="md-nav__link">
+    <span class="md-ellipsis">
+      Updates
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#paginating-updates" class="md-nav__link">
+    <span class="md-ellipsis">
+      Paginating updates
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#following-users" class="md-nav__link">
+    <span class="md-ellipsis">
+      Following users
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#making-it-horizontally-scalable" class="md-nav__link">
+    <span class="md-ellipsis">
+      Making it horizontally scalable
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+    <a href="https://github.com/EanYang7/redis-doc/tree/main/docs/6-manual/patterns/twitter-clone.md" title="编辑此页" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+    </a>
+  
+  
+    
+      
+    
+    <a href="https://github.com/EanYang7/redis-doc/tree/main/docs/6-manual/patterns/twitter-clone.md" title="查看本页的源代码" class="md-content__button md-icon">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0 8a5 5 0 0 1-5-5 5 5 0 0 1 5-5 5 5 0 0 1 5 5 5 5 0 0 1-5 5m0-12.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5Z"/></svg>
+    </a>
+  
+
+
+  <h1>Redis patterns example</h1>
+
+<p>This article describes the design and implementation of a <a href="https://github.com/antirez/retwis">very simple Twitter clone</a> written using PHP with Redis as the only database. The programming community has traditionally considered key-value stores as a special purpose database that couldn't be used as a drop-in replacement for a relational database for the development of web applications. This article will try to show that Redis data structures on top of a key-value layer are an effective data model to implement many kinds of applications.</p>
+<p>Note: the original version of this article was written in 2009 when Redis was
+released. It was not exactly clear at that time that the Redis data model was
+suitable to write entire applications. Now after 5 years there are many cases of
+applications using Redis as their main store, so the goal of the article today
+is to be a tutorial for Redis newcomers. You'll learn how to design a simple
+data layout using Redis, and how to apply different data structures.</p>
+<p>Our Twitter clone, called <a href="https://github.com/antirez/retwis">Retwis</a>, is structurally simple, has very good performance, and can be distributed among any number of web and Redis servers with little efforts. <a href="https://github.com/antirez/retwis">View the Retwis source code</a>.</p>
+<p>I used PHP for the example because of its universal readability. The same (or better) results can be obtained using Ruby, Python, Erlang, and so on.
+A few clones exist (however not all the clones use the same data layout as the
+current version of this tutorial, so please, stick with the official PHP
+implementation for the sake of following the article better).</p>
+<ul>
+<li><a href="https://github.com/danlucraft/retwis-rb">Retwis-RB</a> is a port of Retwis to Ruby and Sinatra written by Daniel Lucraft.</li>
+<li><a href="https://docs.spring.io/spring-data/data-keyvalue/examples/retwisj/current/">Retwis-J</a> is a port of Retwis to Java, using the Spring Data Framework, written by <a href="http://twitter.com/costinl">Costin Leau</a>. Its source code can be found on <a href="https://github.com/SpringSource/spring-data-keyvalue-examples">GitHub</a>, and there is comprehensive documentation available at <a href="http://j.mp/eo6z6I">springsource.org</a>.</li>
+</ul>
+<h2 id="what-is-a-key-value-store">What is a key-value store?<a class="headerlink" href="#what-is-a-key-value-store" title="Permanent link">⚓︎</a></h2>
+<p>The essence of a key-value store is the ability to store some data, called a <em>value</em>, inside a key. The value can be retrieved later only if we know the specific key it was stored in. There is no direct way to search for a key by value. In some sense, it is like a very large hash/dictionary, but it is persistent, i.e. when your application ends, the data doesn't go away. So, for example, I can use the command <code>SET</code> to store the value <em>bar</em> in the key <em>foo</em>:</p>
+<div class="highlight"><pre><span></span><code>SET foo bar
+</code></pre></div>
+<p>Redis stores data permanently, so if I later ask "<em>What is the value stored in key foo?</em>" Redis will reply with <em>bar</em>:</p>
+<div class="highlight"><pre><span></span><code>GET foo =&gt; bar
+</code></pre></div>
+<p>Other common operations provided by key-value stores are <code>DEL</code>, to delete a given key and its associated value, SET-if-not-exists (called <code>SETNX</code> on Redis), to assign a value to a key only if the key does not already exist, and <code>INCR</code>, to atomically increment a number stored in a given key:</p>
+<div class="highlight"><pre><span></span><code>SET foo 10
+INCR foo =&gt; 11
+INCR foo =&gt; 12
+INCR foo =&gt; 13
+</code></pre></div>
+<h2 id="atomic-operations">Atomic operations<a class="headerlink" href="#atomic-operations" title="Permanent link">⚓︎</a></h2>
+<p>There is something special about <code>INCR</code>. You may wonder why Redis provides such an operation if we can do it ourselves with a bit of code? After all, it is as simple as:</p>
+<div class="highlight"><pre><span></span><code>x = GET foo
+x = x + 1
+SET foo x
+</code></pre></div>
+<p>The problem is that incrementing this way will work as long as there is only one client working with the key <em>foo</em> at one time. See what happens if two clients are accessing this key at the same time:</p>
+<div class="highlight"><pre><span></span><code>x = GET foo (yields 10)
+y = GET foo (yields 10)
+x = x + 1 (x is now 11)
+y = y + 1 (y is now 11)
+SET foo x (foo is now 11)
+SET foo y (foo is now 11)
+</code></pre></div>
+<p>Something is wrong! We incremented the value two times, but instead of going from 10 to 12, our key holds 11. This is because the increment done with <code>GET / increment / SET</code> <em>is not an atomic operation</em>. Instead the INCR provided by Redis, Memcached, ..., are atomic implementations, and the server will take care of protecting the key during the time needed to complete the increment in order to prevent simultaneous accesses.</p>
+<p>What makes Redis different from other key-value stores is that it provides other operations similar to INCR that can be used to model complex problems. This is why you can use Redis to write whole web applications without using another database like an SQL database, and without going crazy.</p>
+<h2 id="beyond-key-value-stores-lists">Beyond key-value stores: lists<a class="headerlink" href="#beyond-key-value-stores-lists" title="Permanent link">⚓︎</a></h2>
+<p>In this section we will see which Redis features we need to build our Twitter clone. The first thing to know is that Redis values can be more than strings. Redis supports Lists, Sets, Hashes, Sorted Sets, Bitmaps, and HyperLogLog types as values, and there are atomic operations to operate on them so we are safe even with multiple accesses to the same key. Let's start with Lists:</p>
+<div class="highlight"><pre><span></span><code>LPUSH mylist a (now mylist holds &#39;a&#39;)
+LPUSH mylist b (now mylist holds &#39;b&#39;,&#39;a&#39;)
+LPUSH mylist c (now mylist holds &#39;c&#39;,&#39;b&#39;,&#39;a&#39;)
+</code></pre></div>
+<p><code>LPUSH</code> means <em>Left Push</em>, that is, add an element to the left (or to the head) of the list stored in <em>mylist</em>. If the key <em>mylist</em> does not exist it is automatically created as an empty list before the PUSH operation. As you can imagine, there is also an <code>RPUSH</code> operation that adds the element to the right of the list (on the tail). This is very useful for our Twitter clone. User updates can be added to a list stored in <code>username:updates</code>, for instance.</p>
+<p>There are operations to get data from Lists, of course. For instance, LRANGE returns a range from the list, or the whole list.</p>
+<div class="highlight"><pre><span></span><code>LRANGE mylist 0 1 =&gt; c,b
+</code></pre></div>
+<p>LRANGE uses zero-based indexes - that is the first element is 0, the second 1, and so on. The command arguments are <code>LRANGE key first-index last-index</code>. The <em>last-index</em> argument can be negative, with a special meaning: -1 is the last element of the list, -2 the penultimate, and so on. So, to get the whole list use:</p>
+<div class="highlight"><pre><span></span><code>LRANGE mylist 0 -1 =&gt; c,b,a
+</code></pre></div>
+<p>Other important operations are LLEN that returns the number of elements in the list, and LTRIM that is like LRANGE but instead of returning the specified range <em>trims</em> the list, so it is like <em>Get range from mylist, Set this range as new value</em> but does so atomically.</p>
+<h2 id="the-set-data-type">The Set data type<a class="headerlink" href="#the-set-data-type" title="Permanent link">⚓︎</a></h2>
+<p>Currently we don't use the Set type in this tutorial, but since we use
+Sorted Sets, which are kind of a more capable version of Sets, it is better
+to start introducing Sets first (which are a very useful data structure
+per se), and later Sorted Sets.</p>
+<p>There are more data types than just Lists. Redis also supports Sets, which are unsorted collections of elements. It is possible to add, remove, and test for existence of members, and perform the intersection between different Sets. Of course it is possible to get the elements of a Set. Some examples will make it more clear. Keep in mind that <code>SADD</code> is the <em>add to set</em> operation, <code>SREM</code> is the <em>remove from set</em> operation, <code>SISMEMBER</code> is the <em>test if member</em> operation, and <code>SINTER</code> is the <em>perform intersection</em> operation. Other operations are <code>SCARD</code> to get the cardinality (the number of elements) of a Set, and <code>SMEMBERS</code> to return all the members of a Set.</p>
+<div class="highlight"><pre><span></span><code>SADD myset a
+SADD myset b
+SADD myset foo
+SADD myset bar
+SCARD myset =&gt; 4
+SMEMBERS myset =&gt; bar,a,foo,b
+</code></pre></div>
+<p>Note that <code>SMEMBERS</code> does not return the elements in the same order we added them since Sets are <em>unsorted</em> collections of elements. When you want to store in order it is better to use Lists instead. Some more operations against Sets:</p>
+<div class="highlight"><pre><span></span><code>SADD mynewset b
+SADD mynewset foo
+SADD mynewset hello
+SINTER myset mynewset =&gt; foo,b
+</code></pre></div>
+<p><code>SINTER</code> can return the intersection between Sets but it is not limited to two Sets. You may ask for the intersection of 4,5, or 10000 Sets. Finally let's check how <code>SISMEMBER</code> works:</p>
+<div class="highlight"><pre><span></span><code>SISMEMBER myset foo =&gt; 1
+SISMEMBER myset notamember =&gt; 0
+</code></pre></div>
+<h2 id="the-sorted-set-data-type">The Sorted Set data type<a class="headerlink" href="#the-sorted-set-data-type" title="Permanent link">⚓︎</a></h2>
+<p>Sorted Sets are similar to Sets: collection of elements. However in Sorted
+Sets each element is associated with a floating point value, called the
+<em>element score</em>. Because of the score, elements inside a Sorted Set are
+ordered, since we can always compare two elements by score (and if the score
+happens to be the same, we compare the two elements as strings).</p>
+<p>Like Sets in Sorted Sets it is not possible to add repeated elements, every
+element is unique. However it is possible to update an element's score.</p>
+<p>Sorted Set commands are prefixed with <code>Z</code>. The following is an example
+of Sorted Sets usage:</p>
+<div class="highlight"><pre><span></span><code>ZADD zset 10 a
+ZADD zset 5 b
+ZADD zset 12.55 c
+ZRANGE zset 0 -1 =&gt; b,a,c
+</code></pre></div>
+<p>In the above example we added a few elements with <code>ZADD</code>, and later retrieved
+the elements with <code>ZRANGE</code>. As you can see the elements are returned in order
+according to their score. In order to check if a given element exists, and
+also to retrieve its score if it exists, we use the <code>ZSCORE</code> command:</p>
+<div class="highlight"><pre><span></span><code>ZSCORE zset a =&gt; 10
+ZSCORE zset non_existing_element =&gt; NULL
+</code></pre></div>
+<p>Sorted Sets are a very powerful data structure, you can query elements by
+score range, lexicographically, in reverse order, and so forth.
+To know more <a href="https://redis.io/commands/#sorted_set">please check the Sorted Set sections in the official Redis commands documentation</a>.</p>
+<h2 id="the-hash-data-type">The Hash data type<a class="headerlink" href="#the-hash-data-type" title="Permanent link">⚓︎</a></h2>
+<p>This is the last data structure we use in our program, and is extremely easy
+to grasp since there is an equivalent in almost every programming language out
+there: Hashes. Redis Hashes are basically like Ruby or Python hashes, a
+collection of fields associated with values:</p>
+<div class="highlight"><pre><span></span><code>HMSET myuser name Salvatore surname Sanfilippo country Italy
+HGET myuser surname =&gt; Sanfilippo
+</code></pre></div>
+<p><code>HMSET</code> can be used to set fields in the hash, that can be retrieved with
+<code>HGET</code> later. It is possible to check if a field exists with <code>HEXISTS</code>, or
+to increment a hash field with <code>HINCRBY</code> and so forth.</p>
+<p>Hashes are the ideal data structure to represent <em>objects</em>. For example we
+use Hashes in order to represent Users and Updates in our Twitter clone.</p>
+<p>Okay, we just exposed the basics of the Redis main data structures,
+we are ready to start coding!</p>
+<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">⚓︎</a></h2>
+<p>If you haven't downloaded the <a href="https://github.com/antirez/retwis">Retwis source code</a> already please grab it now. It contains a few PHP files, and also a copy of <a href="https://github.com/nrk/predis">Predis</a>, the PHP client library we use in this example.</p>
+<p>Another thing you probably want is a working Redis server. Just get the source, build with <code>make</code>, run with <code>./redis-server</code>, and you're ready to go. No configuration is required at all in order to play with or run Retwis on your computer.</p>
+<h2 id="data-layout">Data layout<a class="headerlink" href="#data-layout" title="Permanent link">⚓︎</a></h2>
+<p>When working with a relational database, a database schema must be designed so that we'd know the tables, indexes, and so on that the database will contain. We don't have tables in Redis, so what do we need to design? We need to identify what keys are needed to represent our objects and what kind of values these keys need to hold.</p>
+<p>Let's start with Users. We need to represent users, of course, with their username, userid, password, the set of users following a given user, the set of users a given user follows, and so on. The first question is, how should we identify a user? Like in a relational DB, a good solution is to identify different users with different numbers, so we can associate a unique ID with every user. Every other reference to this user will be done by id. Creating unique IDs is very simple to do by using our atomic <code>INCR</code> operation. When we create a new user we can do something like this, assuming the user is called "antirez":</p>
+<div class="highlight"><pre><span></span><code>INCR next_user_id =&gt; 1000
+HMSET user:1000 username antirez password p1pp0
+</code></pre></div>
+<p><em>Note: you should use a hashed password in a real application, for simplicity
+we store the password in clear text.</em></p>
+<p>We use the <code>next_user_id</code> key in order to always get a unique ID for every new user. Then we use this unique ID to name the key holding a Hash with user's data. <em>This is a common design pattern</em> with key-values stores! Keep it in mind.
+Besides the fields already defined, we need some more stuff in order to fully define a User. For example, sometimes it can be useful to be able to get the user ID from the username, so every time we add a user, we also populate the <code>users</code> key, which is a Hash, with the username as field, and its ID as value.</p>
+<div class="highlight"><pre><span></span><code>HSET users antirez 1000
+</code></pre></div>
+<p>This may appear strange at first, but remember that we are only able to access data in a direct way, without secondary indexes. It's not possible to tell Redis to return the key that holds a specific value. This is also <em>our strength</em>. This new paradigm is forcing us to organize data so that everything is accessible by <em>primary key</em>, speaking in relational DB terms.</p>
+<h2 id="followers-following-and-updates">Followers, following, and updates<a class="headerlink" href="#followers-following-and-updates" title="Permanent link">⚓︎</a></h2>
+<p>There is another central need in our system. A user might have users who follow them, which we'll call their followers. A user might follow other users, which we'll call a following. We have a perfect data structure for this. That is... Sets.
+The uniqueness of Sets elements, and the fact we can test in constant time for
+existence, are two interesting features. However what about also remembering
+the time at which a given user started following another one? In an enhanced
+version of our simple Twitter clone this may be useful, so instead of using
+a simple Set, we use a Sorted Set, using the user ID of the following or follower
+user as element, and the unix time at which the relation between the users
+was created, as our score.</p>
+<p>So let's define our keys:</p>
+<div class="highlight"><pre><span></span><code>followers:1000 =&gt; Sorted Set of uids of all the followers users
+following:1000 =&gt; Sorted Set of uids of all the following users
+</code></pre></div>
+<p>We can add new followers with:</p>
+<div class="highlight"><pre><span></span><code>ZADD followers:1000 1401267618 1234 =&gt; Add user 1234 with time 1401267618
+</code></pre></div>
+<p>Another important thing we need is a place where we can add the updates to display in the user's home page. We'll need to access this data in chronological order later, from the most recent update to the oldest, so the perfect kind of data structure for this is a List. Basically every new update will be <code>LPUSH</code>ed in the user updates key, and thanks to <code>LRANGE</code>, we can implement pagination and so on. Note that we use the words <em>updates</em> and <em>posts</em> interchangeably, since updates are actually "little posts" in some way.</p>
+<div class="highlight"><pre><span></span><code>posts:1000 =&gt; a List of post ids - every new post is LPUSHed here.
+</code></pre></div>
+<p>This list is basically the User timeline. We'll push the IDs of her/his own
+posts, and, the IDs of all the posts of created by the following users.
+Basically, we'll implement a write fanout.</p>
+<h2 id="authentication">Authentication<a class="headerlink" href="#authentication" title="Permanent link">⚓︎</a></h2>
+<p>OK, we have more or less everything about the user except for authentication. We'll handle authentication in a simple but robust way: we don't want to use PHP sessions, as our system must be ready to be distributed among different web servers easily, so we'll keep the whole state in our Redis database. All we need is a random <strong>unguessable</strong> string to set as the cookie of an authenticated user, and a key that will contain the user ID of the client holding the string.</p>
+<p>We need two things in order to make this thing work in a robust way.
+First: the current authentication <em>secret</em> (the random unguessable string)
+should be part of the User object, so when the user is created we also set
+an <code>auth</code> field in its Hash:</p>
+<div class="highlight"><pre><span></span><code>HSET user:1000 auth fea5e81ac8ca77622bed1c2132a021f9
+</code></pre></div>
+<p>Moreover, we need a way to map authentication secrets to user IDs, so
+we also take an <code>auths</code> key, which has as value a Hash type mapping
+authentication secrets to user IDs.</p>
+<div class="highlight"><pre><span></span><code>HSET auths fea5e81ac8ca77622bed1c2132a021f9 1000
+</code></pre></div>
+<p>In order to authenticate a user we'll do these simple steps (see the <code>login.php</code> file in the Retwis source code):</p>
+<ul>
+<li>Get the username and password via the login form.</li>
+<li>Check if the <code>username</code> field actually exists in the <code>users</code> Hash.</li>
+<li>If it exists we have the user id, (i.e. 1000).</li>
+<li>Check if user:1000 password matches, if not, return an error message.</li>
+<li>Ok authenticated! Set "fea5e81ac8ca77622bed1c2132a021f9" (the value of user:1000 <code>auth</code> field) as the "auth" cookie.</li>
+</ul>
+<p>This is the actual code:</p>
+<div class="highlight"><pre><span></span><code>include(&quot;retwis.php&quot;);
+
+# Form sanity checks
+if (!gt(&quot;username&quot;) || !gt(&quot;password&quot;))
+    goback(&quot;You need to enter both username and password to login.&quot;);
+
+# The form is ok, check if the username is available
+$username = gt(&quot;username&quot;);
+$password = gt(&quot;password&quot;);
+$r = redisLink();
+$userid = $r-&gt;hget(&quot;users&quot;,$username);
+if (!$userid)
+    goback(&quot;Wrong username or password&quot;);
+$realpassword = $r-&gt;hget(&quot;user:$userid&quot;,&quot;password&quot;);
+if ($realpassword != $password)
+    goback(&quot;Wrong username or password&quot;);
+
+# Username / password OK, set the cookie and redirect to index.php
+$authsecret = $r-&gt;hget(&quot;user:$userid&quot;,&quot;auth&quot;);
+setcookie(&quot;auth&quot;,$authsecret,time()+3600*24*365);
+header(&quot;Location: index.php&quot;);
+</code></pre></div>
+<p>This happens every time a user logs in, but we also need a function <code>isLoggedIn</code> in order to check if a given user is already authenticated or not. These are the logical steps preformed by the <code>isLoggedIn</code> function:</p>
+<ul>
+<li>Get the "auth" cookie from the user. If there is no cookie, the user is not logged in, of course. Let's call the value of the cookie <code>&lt;authcookie&gt;</code>.</li>
+<li>Check if <code>&lt;authcookie&gt;</code> field in the <code>auths</code> Hash exists, and what the value (the user ID) is (1000 in the example).</li>
+<li>In order for the system to be more robust, also verify that user:1000 auth field also matches.</li>
+<li>OK the user is authenticated, and we loaded a bit of information in the <code>$User</code> global variable.</li>
+</ul>
+<p>The code is simpler than the description, possibly:</p>
+<div class="highlight"><pre><span></span><code>function isLoggedIn() {
+    global $User, $_COOKIE;
+
+    if (isset($User)) return true;
+
+    if (isset($_COOKIE[&#39;auth&#39;])) {
+        $r = redisLink();
+        $authcookie = $_COOKIE[&#39;auth&#39;];
+        if ($userid = $r-&gt;hget(&quot;auths&quot;,$authcookie)) {
+            if ($r-&gt;hget(&quot;user:$userid&quot;,&quot;auth&quot;) != $authcookie) return false;
+            loadUserInfo($userid);
+            return true;
+        }
+    }
+    return false;
+}
+
+function loadUserInfo($userid) {
+    global $User;
+
+    $r = redisLink();
+    $User[&#39;id&#39;] = $userid;
+    $User[&#39;username&#39;] = $r-&gt;hget(&quot;user:$userid&quot;,&quot;username&quot;);
+    return true;
+}
+</code></pre></div>
+<p>Having <code>loadUserInfo</code> as a separate function is overkill for our application, but it's a good approach in a complex application. The only thing that's missing from all the authentication is the logout. What do we do on logout? That's simple, we'll just change the random string in user:1000 <code>auth</code> field, remove the old authentication secret from the <code>auths</code> Hash, and add the new one.</p>
+<p><em>Important:</em> the logout procedure explains why we don't just authenticate the user after looking up the authentication secret in the <code>auths</code> Hash, but double check it against user:1000 <code>auth</code> field. The true authentication string is the latter, while the <code>auths</code> Hash is just an authentication field that may even be volatile, or, if there are bugs in the program or a script gets interrupted, we may even end with multiple entries in the <code>auths</code> key pointing to the same user ID. The logout code is the following (<code>logout.php</code>):</p>
+<div class="highlight"><pre><span></span><code>include(&quot;retwis.php&quot;);
+
+if (!isLoggedIn()) {
+    header(&quot;Location: index.php&quot;);
+    exit;
+}
+
+$r = redisLink();
+$newauthsecret = getrand();
+$userid = $User[&#39;id&#39;];
+$oldauthsecret = $r-&gt;hget(&quot;user:$userid&quot;,&quot;auth&quot;);
+
+$r-&gt;hset(&quot;user:$userid&quot;,&quot;auth&quot;,$newauthsecret);
+$r-&gt;hset(&quot;auths&quot;,$newauthsecret,$userid);
+$r-&gt;hdel(&quot;auths&quot;,$oldauthsecret);
+
+header(&quot;Location: index.php&quot;);
+</code></pre></div>
+<p>That is just what we described and should be simple to understand.</p>
+<h2 id="updates">Updates<a class="headerlink" href="#updates" title="Permanent link">⚓︎</a></h2>
+<p>Updates, also known as posts, are even simpler. In order to create a new post in the database we do something like this:</p>
+<div class="highlight"><pre><span></span><code>INCR next_post_id =&gt; 10343
+HMSET post:10343 user_id $owner_id time $time body &quot;I&#39;m having fun with Retwis&quot;
+</code></pre></div>
+<p>As you can see each post is just represented by a Hash with three fields. The ID of the user owning the post, the time at which the post was published, and finally, the body of the post, which is, the actual status message.</p>
+<p>After we create a post and we obtain the post ID, we need to LPUSH the ID in the timeline of every user that is following the author of the post, and of course in the list of posts of the author itself (everybody is virtually following herself/himself). This is the file <code>post.php</code> that shows how this is performed:</p>
+<div class="highlight"><pre><span></span><code>include(&quot;retwis.php&quot;);
+
+if (!isLoggedIn() || !gt(&quot;status&quot;)) {
+    header(&quot;Location:index.php&quot;);
+    exit;
+}
+
+$r = redisLink();
+$postid = $r-&gt;incr(&quot;next_post_id&quot;);
+$status = str_replace(&quot;\n&quot;,&quot; &quot;,gt(&quot;status&quot;));
+$r-&gt;hmset(&quot;post:$postid&quot;,&quot;user_id&quot;,$User[&#39;id&#39;],&quot;time&quot;,time(),&quot;body&quot;,$status);
+$followers = $r-&gt;zrange(&quot;followers:&quot;.$User[&#39;id&#39;],0,-1);
+$followers[] = $User[&#39;id&#39;]; /* Add the post to our own posts too */
+
+foreach($followers as $fid) {
+    $r-&gt;lpush(&quot;posts:$fid&quot;,$postid);
+}
+# Push the post on the timeline, and trim the timeline to the
+# newest 1000 elements.
+$r-&gt;lpush(&quot;timeline&quot;,$postid);
+$r-&gt;ltrim(&quot;timeline&quot;,0,1000);
+
+header(&quot;Location: index.php&quot;);
+</code></pre></div>
+<p>The core of the function is the <code>foreach</code> loop. We use <code>ZRANGE</code> to get all the followers of the current user, then the loop will <code>LPUSH</code> the push the post in every follower timeline List.</p>
+<p>Note that we also maintain a global timeline for all the posts, so that in the Retwis home page we can show everybody's updates easily. This requires just doing an <code>LPUSH</code> to the <code>timeline</code> List. Let's face it, aren't you starting to think it was a bit strange to have to sort things added in chronological order using <code>ORDER BY</code> with SQL? I think so.</p>
+<p>There is an interesting thing to notice in the code above: we used a new
+command called <code>LTRIM</code> after we perform the <code>LPUSH</code> operation in the global
+timeline. This is used in order to trim the list to just 1000 elements. The
+global timeline is actually only used in order to show a few posts in the
+home page, there is no need to have the full history of all the posts.</p>
+<p>Basically <code>LTRIM</code> + <code>LPUSH</code> is a way to create a <em>capped collection</em> in Redis.</p>
+<h2 id="paginating-updates">Paginating updates<a class="headerlink" href="#paginating-updates" title="Permanent link">⚓︎</a></h2>
+<p>Now it should be pretty clear how we can use <code>LRANGE</code> in order to get ranges of posts, and render these posts on the screen. The code is simple:</p>
+<div class="highlight"><pre><span></span><code>function showPost($id) {
+    $r = redisLink();
+    $post = $r-&gt;hgetall(&quot;post:$id&quot;);
+    if (empty($post)) return false;
+
+    $userid = $post[&#39;user_id&#39;];
+    $username = $r-&gt;hget(&quot;user:$userid&quot;,&quot;username&quot;);
+    $elapsed = strElapsed($post[&#39;time&#39;]);
+    $userlink = &quot;&lt;a class=\&quot;username\&quot; href=\&quot;profile.php?u=&quot;.urlencode($username).&quot;\&quot;&gt;&quot;.utf8entities($username).&quot;&lt;/a&gt;&quot;;
+
+    echo(&#39;&lt;div class=&quot;post&quot;&gt;&#39;.$userlink.&#39; &#39;.utf8entities($post[&#39;body&#39;]).&quot;&lt;br&gt;&quot;);
+    echo(&#39;&lt;i&gt;posted &#39;.$elapsed.&#39; ago via web&lt;/i&gt;&lt;/div&gt;&#39;);
+    return true;
+}
+
+function showUserPosts($userid,$start,$count) {
+    $r = redisLink();
+    $key = ($userid == -1) ? &quot;timeline&quot; : &quot;posts:$userid&quot;;
+    $posts = $r-&gt;lrange($key,$start,$start+$count);
+    $c = 0;
+    foreach($posts as $p) {
+        if (showPost($p)) $c++;
+        if ($c == $count) break;
+    }
+    return count($posts) == $count+1;
+}
+</code></pre></div>
+<p><code>showPost</code> will simply convert and print a Post in HTML while <code>showUserPosts</code> gets a range of posts and then passes them to <code>showPosts</code>.</p>
+<p><em>Note: <code>LRANGE</code> is not very efficient if the list of posts start to be very
+big, and we want to access elements which are in the middle of the list, since Redis Lists are backed by linked lists. If a system is designed for
+deep pagination of million of items, it is better to resort to Sorted Sets
+instead.</em></p>
+<h2 id="following-users">Following users<a class="headerlink" href="#following-users" title="Permanent link">⚓︎</a></h2>
+<p>It is not hard, but we did not yet check how we create following / follower relationships. If user ID 1000 (antirez) wants to follow user ID 5000 (pippo), we need to create both a following and a follower relationship. We just need to <code>ZADD</code> calls:</p>
+<div class="highlight"><pre><span></span><code>    ZADD following:1000 5000
+    ZADD followers:5000 1000
+</code></pre></div>
+<p>Note the same pattern again and again. In theory with a relational database, the list of following and followers would be contained in a single table with fields like <code>following_id</code> and <code>follower_id</code>. You can extract the followers or following of every user using an SQL query. With a key-value DB things are a bit different since we need to set both the <code>1000 is following 5000</code> and <code>5000 is followed by 1000</code> relations. This is the price to pay, but on the other hand accessing the data is simpler and extremely fast. Having these things as separate sets allows us to do interesting stuff. For example, using <code>ZINTERSTORE</code> we can have the intersection of <code>following</code> of two different users, so we may add a feature to our Twitter clone so that it is able to tell you very quickly when you visit somebody else's profile, "you and Alice have 34 followers in common", and things like that.</p>
+<p>You can find the code that sets or removes a following / follower relation in the <code>follow.php</code> file.</p>
+<h2 id="making-it-horizontally-scalable">Making it horizontally scalable<a class="headerlink" href="#making-it-horizontally-scalable" title="Permanent link">⚓︎</a></h2>
+<p>Gentle reader, if you read till this point you are already a hero. Thank you. Before talking about scaling horizontally it is worth checking performance on a single server. Retwis is <em>extremely fast</em>, without any kind of cache. On a very slow and loaded server, an Apache benchmark with 100 parallel clients issuing 100000 requests measured the average pageview to take 5 milliseconds. This means you can serve millions of users every day with just a single Linux box, and this one was monkey ass slow... Imagine the results with more recent hardware.</p>
+<p>However you can't go with a single server forever, how do you scale a key-value
+store?</p>
+<p>Retwis does not perform any multi-keys operation, so making it scalable is
+simple: you may use client-side sharding, or something like a sharding proxy
+like Twemproxy, or the upcoming Redis Cluster.</p>
+<p>To know more about those topics please read
+<a href="/topics/partitioning">our documentation about sharding</a>. However, the point here
+to stress is that in a key-value store, if you design with care, the data set
+is split among <strong>many independent small keys</strong>. To distribute those keys
+to multiple nodes is more straightforward and predictable compared to using
+a semantically more complex database system.</p>
+
+  <hr>
+<div class="md-source-file">
+  <small>
+    
+      最后更新:
+      <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 25, 2023</span>
+      
+        <br>
+        创建日期:
+        <span class="git-revision-date-localized-plugin git-revision-date-localized-plugin-date">November 25, 2023</span>
+      
+    
+  </small>
+</div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="页脚" >
+        
+          
+          <a href="../distributed-locks/" class="md-footer__link md-footer__link--prev" aria-label="上一页: Distributed Locks with Redis">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                上一页
+              </span>
+              <div class="md-ellipsis">
+                Distributed Locks with Redis
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../indexes/" class="md-footer__link md-footer__link--next" aria-label="下一页: Secondary indexing">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                下一页
+              </span>
+              <div class="md-ellipsis">
+                Secondary indexing
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright &copy; 2023 Ean Yang
+    </div>
+  
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+    <a href="https://github.com/YQisme" target="_blank" rel="noopener" title="github主页" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://space.bilibili.com/244185393?spm_id_from=333.788.0.0" target="_blank" rel="noopener" title="b站主页" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M488.6 104.1c16.7 18.1 24.4 39.7 23.3 65.7v202.4c-.4 26.4-9.2 48.1-26.5 65.1-17.2 17-39.1 25.9-65.5 26.7H92.02c-26.45-.8-48.21-9.8-65.28-27.2C9.682 419.4.767 396.5 0 368.2V169.8c.767-26 9.682-47.6 26.74-65.7C43.81 87.75 65.57 78.77 92.02 78h29.38L96.05 52.19c-5.75-5.73-8.63-13-8.63-21.79 0-8.8 2.88-16.06 8.63-21.797C101.8 2.868 109.1 0 117.9 0s16.1 2.868 21.9 8.603L213.1 78h88l74.5-69.397C381.7 2.868 389.2 0 398 0c8.8 0 16.1 2.868 21.9 8.603 5.7 5.737 8.6 12.997 8.6 21.797 0 8.79-2.9 16.06-8.6 21.79L394.6 78h29.3c26.4.77 48 9.75 64.7 26.1zm-38.8 69.7c-.4-9.6-3.7-17.4-10.7-23.5-5.2-6.1-14-9.4-22.7-9.8H96.05c-9.59.4-17.45 3.7-23.58 9.8-6.14 6.1-9.4 13.9-9.78 23.5v194.4c0 9.2 3.26 17 9.78 23.5s14.38 9.8 23.58 9.8H416.4c9.2 0 17-3.3 23.3-9.8 6.3-6.5 9.7-14.3 10.1-23.5V173.8zm-264.3 42.7c6.3 6.3 9.7 14.1 10.1 23.2V273c-.4 9.2-3.7 16.9-9.8 23.2-6.2 6.3-14 9.5-23.6 9.5-9.6 0-17.5-3.2-23.6-9.5-6.1-6.3-9.4-14-9.8-23.2v-33.3c.4-9.1 3.8-16.9 10.1-23.2 6.3-6.3 13.2-9.6 23.3-10 9.2.4 17 3.7 23.3 10zm191.5 0c6.3 6.3 9.7 14.1 10.1 23.2V273c-.4 9.2-3.7 16.9-9.8 23.2-6.1 6.3-14 9.5-23.6 9.5-9.6 0-17.4-3.2-23.6-9.5-7-6.3-9.4-14-9.7-23.2v-33.3c.3-9.1 3.7-16.9 10-23.2 6.3-6.3 14.1-9.6 23.3-10 9.2.4 17 3.7 23.3 10z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="https://eanyang7.com" target="_blank" rel="noopener" title="个人主页" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M112 48a48 48 0 1 1 96 0 48 48 0 1 1-96 0zm40 304v128c0 17.7-14.3 32-32 32s-32-14.3-32-32V256.9l-28.6 47.6c-9.1 15.1-28.8 20-43.9 10.9s-20-28.8-10.9-43.9l58.3-97c17.4-28.9 48.6-46.6 82.3-46.6h29.7c33.7 0 64.9 17.7 82.3 46.6l58.3 97c9.1 15.1 4.2 34.8-10.9 43.9s-34.8 4.2-43.9-10.9L232 256.9V480c0 17.7-14.3 32-32 32s-32-14.3-32-32V352h-16z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.instant", "navigation.instant.progress", "navigation.tracking", "navigation.prune", "navigation.top", "toc.follow", "header.autohide", "navigation.footer", "search.suggest", "search.highlight", "search.share", "content.action.edit", "content.action.view", "content.code.copy"], "search": "../../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.6c14ae12.min.js"></script>
+      
+    
+  </body>
+</html>
