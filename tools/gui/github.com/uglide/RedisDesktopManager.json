@@ -1,8 +1,0 @@
-{
-    "name": "Redis Desktop Manager",
-    "description": "Cross-platform desktop GUI management tool for Redis",
-    "homepage": "http://redisdesktop.com",
-    "twitter": [
-        "u_glide"
-    ]
-}

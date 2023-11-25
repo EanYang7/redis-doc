@@ -1,7 +1,0 @@
-{
-    "name": "Recurrent",
-    "description": "A Redis-backed manager of recurrent jobs, for node.js",
-    "twitter": [
-        "pconstr"
-    ]
-}

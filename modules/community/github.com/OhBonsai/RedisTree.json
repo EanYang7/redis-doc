@@ -1,8 +1,0 @@
-{
-    "name": "redis-tree",
-    "license": "MIT",
-    "description": "Implements Polytree as a native data type. It allows creating,locating,pushing and detaching tree from Redis keys.",
-    "github": [
-        "ohbonsai"
-    ]
-}

@@ -1,4 +1,0 @@
-{
-    "name": "promise-redis",
-    "description": "Use any promise library with node_redis."
-}

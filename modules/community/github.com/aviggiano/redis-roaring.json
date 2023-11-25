@@ -1,8 +1,0 @@
-{
-    "name": "redis-roaring",
-    "license": "MIT",
-    "description": "Uses the CRoaring library to implement roaring bitmap commands for Redis.",
-    "github": [
-        "aviggiano"
-    ]
-}

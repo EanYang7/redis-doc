@@ -1,8 +1,0 @@
-{
-    "name": "Webdis",
-    "description": "A Redis HTTP interface with JSON output.",
-    "homepage": "http://webd.is/",
-    "twitter": [
-        "yowgi"
-    ]
-}

@@ -1,8 +1,0 @@
-{
-    "name": "Sidekiq",
-    "description": "Simple, efficient message processing for your Rails 3 application.",
-    "homepage": "http://sidekiq.org/",
-    "twitter": [
-        "getajobmike"
-    ]
-}
